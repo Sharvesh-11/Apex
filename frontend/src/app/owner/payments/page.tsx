@@ -9,7 +9,9 @@ import type { Member, Payment, Subscription } from '@/types';
 import useUIStore from '@/store/uiStore';
 
 type PaymentRecord = Payment & {
-	member?: Pick<Member, 'full_name' | 'email'>;
+	member?: Pick<Member, 'full_name' | 'email'> & {
+		name?: string;
+	};
 };
 
 type CashPaymentFormState = {
@@ -676,7 +678,7 @@ export default function OwnerPaymentsPage() {
 						// If still not found, try to look up from members array
 						if (!memberName && (payment as any).member_id) {
 							const foundMember = members.find((m) => m.id === (payment as any).member_id);
-							memberName = foundMember?.full_name || foundMember?.name || null;
+							memberName = foundMember?.full_name || null;
 						}
 
 						memberName = memberName || 'Unknown Member';
@@ -697,8 +699,14 @@ export default function OwnerPaymentsPage() {
 									return (
 										<div
 											key={payment.id}
-												onMouseEnter={() => setHoveredPaymentId(payment.id)}
-												onMouseLeave={() => setHoveredPaymentId(null)}
+											onMouseEnter={(e) => {
+												setHoveredPaymentId(payment.id);
+												e.currentTarget.style.background = 'rgba(139, 92, 246, 0.04)';
+											}}
+											onMouseLeave={(e) => {
+												setHoveredPaymentId(null);
+												e.currentTarget.style.background = 'rgba(16, 6, 35, 0.72)';
+											}}
 											style={{
 												display: 'grid',
 												gridTemplateColumns: '60px 1fr auto auto',
@@ -713,8 +721,6 @@ export default function OwnerPaymentsPage() {
 												transition: 'all 0.2s',
 												cursor: 'pointer',
 											}}
-											onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139, 92, 246, 0.04)')}
-											onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(16, 6, 35, 0.72)')}
 										>
 											{/* Avatar */}
 											<div
