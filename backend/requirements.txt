@@ -1,7 +1,6 @@
 annotated-types==0.7.0
 attrs==26.1.0
 autocommand==2.2.2
-awscli==2.34.9
 awscrt==0.31.3
 btrfsutil==6.19.1
 certifi==2026.2.25
