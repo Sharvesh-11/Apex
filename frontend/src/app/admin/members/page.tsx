@@ -21,6 +21,7 @@ import {
 import * as apiClient from '@/lib/api';
 import type { Member, Plan, Subscription } from '@/types';
 import useUIStore from '@/store/uiStore';
+import { C } from '@/lib/config';
 
 type MemberRecord = Member & {
   status?: 'active' | 'inactive';
@@ -337,7 +338,7 @@ export default function AdminMembersPage() {
 
       {roleModalMember ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <form onSubmit={handleUpdateRole} className={`w-full max-w-md p-6 shadow-xl ${SURFACE_CLASS}`}>
+          <form onSubmit={handleUpdateRole} className={`w-full max-w-md p-6 shadow-xl ${C.SURFACE_CLASS}`}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-light text-textPrimary">Update Role for {roleModalMember.full_name}</h3>
               <button type="button" onClick={() => setRoleModalMember(null)} className="rounded-xl border border-[rgba(139,92,246,0.2)] p-2 text-textSecondary transition-colors hover:text-textPrimary">
@@ -360,7 +361,7 @@ export default function AdminMembersPage() {
         </div>
       ) : null}
 
-      <div className={`p-5 md:p-6 ${SURFACE_CLASS}`}>
+      <div className={`p-5 md:p-6 ${C.SURFACE_CLASS}`}>
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-light tracking-wide text-textPrimary md:text-3xl">Platform Members</h1>
@@ -409,7 +410,7 @@ export default function AdminMembersPage() {
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-6">
         {statCards.map((card) => (
-          <div key={card.key} className={`${SURFACE_CLASS} relative overflow-hidden p-4`}>
+          <div key={card.key} className={`${C.SURFACE_CLASS} relative overflow-hidden p-4`}>
             <div
               className="pointer-events-none absolute inset-0"
               style={{
@@ -427,9 +428,9 @@ export default function AdminMembersPage() {
         ))}
       </section>
 
-      {error ? <div className={`${SURFACE_CLASS} p-4 text-textSecondary`}>{error}</div> : null}
+      {error ? <div className={`${C.SURFACE_CLASS} p-4 text-textSecondary`}>{error}</div> : null}
 
-      <section className={`${SURFACE_CLASS} p-3 md:p-4`}>
+      <section className={`${C.SURFACE_CLASS} p-3 md:p-4`}>
         <div className="max-h-[62vh] space-y-2 overflow-y-auto pr-1">
           {loading
             ? memberSkeletons.map((_, index) => (
@@ -553,7 +554,7 @@ export default function AdminMembersPage() {
 
       {isModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className={`w-full max-w-2xl p-6 shadow-xl ${SURFACE_CLASS}`}>
+          <div className={`w-full max-w-2xl p-6 shadow-xl ${C.SURFACE_CLASS}`}>
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-light text-textPrimary">Add Member</h2>
               <button

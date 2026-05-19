@@ -1,4 +1,5 @@
 interface SiteConfig {
+	
 	brand: {
 		name: string;
 		tagline: string;
@@ -146,3 +147,37 @@ export const siteConfig: SiteConfig = {
 			"luxury gym Bengaluru, elite fitness, solo leveling aesthetic gym, premium fitness, arise fitness",
 	},
 };
+export const C = {
+	bg: siteConfig.theme.backgroundColor,
+	background: siteConfig.theme.backgroundColor,
+	backgroundGradient: siteConfig.theme.backgroundGradient,
+
+	surface: siteConfig.theme.surfaceColor,
+	glass: 'rgba(255,255,255,0.04)',
+	glassMid: 'rgba(255,255,255,0.06)',
+
+	primary: siteConfig.theme.primaryColor,
+	primaryHover: siteConfig.theme.primaryHover,
+	primaryGlow: siteConfig.theme.shadowColor,
+	accent: siteConfig.theme.accentColor,
+	accentSoft: siteConfig.theme.accentSoft,
+
+	green: siteConfig.theme.successColor,
+	gold: siteConfig.theme.warningColor,
+	red: siteConfig.theme.dangerColor,
+
+	textPrimary: siteConfig.theme.textPrimary,
+	textSecondary: siteConfig.theme.textSecondary,
+	textMuted: siteConfig.theme.textMuted,
+
+	border: siteConfig.theme.borderColor,
+	borderMid: 'rgba(139,92,246,0.20)',
+
+	shadow: siteConfig.theme.shadowColor,
+	radius: siteConfig.theme.borderRadius,
+	transition: siteConfig.theme.transition,
+
+	// Design system classes for admin UI
+	SURFACE_CLASS: 'rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)] backdrop-blur-[24px]',
+	FIELD_CLASS: 'w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary',
+} as const;

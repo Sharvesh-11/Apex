@@ -17,6 +17,7 @@ import {
 import * as apiClient from '@/lib/api';
 import type { Member, Payment, Plan, Subscription, AttendanceLog } from '@/types';
 import useUIStore from '@/store/uiStore';
+import { C } from '@/lib/config';
 
 type RouteParams = {
   id?: string | string[];
@@ -72,12 +73,6 @@ const timeFormatter = new Intl.DateTimeFormat('en-IN', {
 
 const today = new Date().toISOString().slice(0, 10);
 
-const SURFACE_CLASS =
-  'rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)] backdrop-blur-[24px]';
-
-const FIELD_CLASS =
-  'w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary';
-
 const tabLabels: Array<{ key: TabKey; label: string }> = [
   { key: 'subscription', label: 'Subscription' },
   { key: 'payments', label: 'Payments' },
@@ -132,7 +127,7 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className={`w-full max-w-2xl p-6 shadow-2xl ${SURFACE_CLASS}`}>
+      <div className={`w-full max-w-2xl p-6 shadow-2xl ${C.SURFACE_CLASS}`}>
         <div className="mb-6 flex items-center justify-between gap-4">
           <h3 className="text-xl font-light text-textPrimary">{title}</h3>
           <button
@@ -323,10 +318,10 @@ export default function AdminMemberDetailPage() {
       <div className="space-y-6">
         <div className="h-10 animate-pulse rounded-xl bg-[rgba(139,92,246,0.1)]" />
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className={`${SURFACE_CLASS} p-6`}>
+          <div className={`${C.SURFACE_CLASS} p-6`}>
             <div className="h-48 animate-pulse rounded-xl bg-[rgba(139,92,246,0.1)]" />
           </div>
-          <div className={`${SURFACE_CLASS} p-6`}>
+          <div className={`${C.SURFACE_CLASS} p-6`}>
             <div className="h-48 animate-pulse rounded-xl bg-[rgba(139,92,246,0.1)]" />
           </div>
         </div>
@@ -336,7 +331,7 @@ export default function AdminMemberDetailPage() {
 
   if (error || !member) {
     return (
-      <div className={`${SURFACE_CLASS} p-6 text-textSecondary`}>
+      <div className={`${C.SURFACE_CLASS} p-6 text-textSecondary`}>
         {error ?? 'Member not found'}
       </div>
     );
@@ -421,7 +416,7 @@ export default function AdminMemberDetailPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <section className={`${SURFACE_CLASS} relative overflow-hidden p-6`}>
+        <section className={`${C.SURFACE_CLASS} relative overflow-hidden p-6`}>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(139,92,246,0.11),transparent_55%)]" />
 
           <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
@@ -477,7 +472,7 @@ export default function AdminMemberDetailPage() {
                   onChange={(event) =>
                     setEditForm((current) => ({ ...current, full_name: event.target.value }))
                   }
-                  className={FIELD_CLASS}
+                  className={C.FIELD_CLASS}
                 />
               </div>
               <div>
@@ -487,7 +482,7 @@ export default function AdminMemberDetailPage() {
                   onChange={(event) =>
                     setEditForm((current) => ({ ...current, phone: event.target.value }))
                   }
-                  className={FIELD_CLASS}
+                  className={C.FIELD_CLASS}
                 />
               </div>
               <div className="md:col-span-2 flex justify-end gap-3">
@@ -511,7 +506,7 @@ export default function AdminMemberDetailPage() {
           ) : null}
         </section>
 
-        <section className={`${SURFACE_CLASS} p-5`}>
+        <section className={`${C.SURFACE_CLASS} p-5`}>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(3,0,20,0.45)] p-3">
               <div className="text-xs uppercase tracking-[0.12em] text-[#8E7CC3]">Subscription</div>
@@ -535,7 +530,7 @@ export default function AdminMemberDetailPage() {
         </section>
       </div>
 
-      <div className={`${SURFACE_CLASS} p-2`}>
+      <div className={`${C.SURFACE_CLASS} p-2`}>
         <div className="flex flex-wrap gap-2">
           {tabLabels.map((tab) => (
             <button
@@ -558,7 +553,7 @@ export default function AdminMemberDetailPage() {
       {activeTab === 'subscription' ? (
         <div className="space-y-6">
           {currentSubscription ? (
-            <div className={`${SURFACE_CLASS} p-6`}>
+            <div className={`${C.SURFACE_CLASS} p-6`}>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
                   <div className="text-sm text-[#8E7CC3]">Current Active Subscription</div>
@@ -602,7 +597,7 @@ export default function AdminMemberDetailPage() {
               </div>
             </div>
           ) : (
-            <div className={`${SURFACE_CLASS} p-6`}>
+            <div className={`${C.SURFACE_CLASS} p-6`}>
               <div className="text-lg font-light text-textPrimary">No active subscription</div>
               <div className="mt-2 text-[#8E7CC3]">Use Add New Subscription to assign a plan</div>
               <div className="mt-4">
@@ -617,7 +612,7 @@ export default function AdminMemberDetailPage() {
             </div>
           )}
 
-          <div className={`${SURFACE_CLASS} space-y-3 p-3 md:p-4`}>
+          <div className={`${C.SURFACE_CLASS} space-y-3 p-3 md:p-4`}>
             {subscriptions.length > 0 ? (
               subscriptions.map((subscription) => (
                 <article
@@ -688,7 +683,7 @@ export default function AdminMemberDetailPage() {
       {/* Payments tab */}
       {activeTab === 'payments' ? (
         <div className="space-y-6">
-          <div className={`${SURFACE_CLASS} flex items-center justify-between p-6`}>
+          <div className={`${C.SURFACE_CLASS} flex items-center justify-between p-6`}>
             <h2 className="text-xl font-light text-textPrimary">Payments</h2>
             <button
               type="button"
@@ -699,7 +694,7 @@ export default function AdminMemberDetailPage() {
             </button>
           </div>
 
-          <div className={`${SURFACE_CLASS} space-y-3 p-3 md:p-4`}>
+          <div className={`${C.SURFACE_CLASS} space-y-3 p-3 md:p-4`}>
             {payments.length > 0 ? (
               payments.map((payment) => (
                 <article
@@ -751,7 +746,7 @@ export default function AdminMemberDetailPage() {
       {/* Attendance tab */}
       {activeTab === 'attendance' ? (
         <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-          <div className={`${SURFACE_CLASS} p-6`}>
+          <div className={`${C.SURFACE_CLASS} p-6`}>
             <h2 className="text-xl font-light text-textPrimary">Last 10 Check-Ins</h2>
             <div className="mt-5 space-y-3">
               {attendance.length > 0 ? (
@@ -787,7 +782,7 @@ export default function AdminMemberDetailPage() {
             </div>
           </div>
 
-          <div className={`${SURFACE_CLASS} relative overflow-hidden p-6`}>
+          <div className={`${C.SURFACE_CLASS} relative overflow-hidden p-6`}>
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_25%,rgba(34,197,94,0.07),transparent_65%)]" />
             <div className="relative z-10 text-sm text-[#8E7CC3]">Check-ins this month</div>
             <div className="relative z-10 mt-2 text-4xl font-light text-textPrimary">{totalCheckinsThisMonth}</div>
@@ -810,7 +805,7 @@ export default function AdminMemberDetailPage() {
                 onChange={(event) =>
                   setSubscriptionForm((current) => ({ ...current, plan_id: event.target.value }))
                 }
-                className={FIELD_CLASS}
+                className={C.FIELD_CLASS}
               >
                 <option value="">Select a plan</option>
                 {plans.map((plan) => (
@@ -832,7 +827,7 @@ export default function AdminMemberDetailPage() {
                     start_date: event.target.value,
                   }))
                 }
-                className={FIELD_CLASS}
+                className={C.FIELD_CLASS}
               />
             </div>
 
@@ -869,7 +864,7 @@ export default function AdminMemberDetailPage() {
                 onChange={(event) =>
                   setCashForm((current) => ({ ...current, amount: event.target.value }))
                 }
-                className={FIELD_CLASS}
+                className={C.FIELD_CLASS}
               />
             </div>
             <div>
@@ -879,7 +874,7 @@ export default function AdminMemberDetailPage() {
                 onChange={(event) =>
                   setCashForm((current) => ({ ...current, notes: event.target.value }))
                 }
-                className={FIELD_CLASS}
+                className={C.FIELD_CLASS}
                 rows={4}
               />
             </div>

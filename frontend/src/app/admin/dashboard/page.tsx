@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import * as api from '@/lib/api';
-import { siteConfig } from '@/lib/config';
+import { siteConfig, C } from '@/lib/config';
 
 interface Stats {
 	totalMembers: number;
@@ -50,9 +50,6 @@ interface StatCardProps {
 	trend: string;
 	formatter?: (value: number) => string;
 }
-
-const SURFACE_CLASS =
-	'rounded-[24px] border backdrop-blur-[24px] bg-[rgba(16,6,35,0.72)] border-[rgba(139,92,246,0.12)]';
 
 const getInitials = (name?: string | null) => {
 	if (!name) return 'NA';
@@ -98,7 +95,7 @@ const StatCard = ({
 	}, [value]);
 
 	return (
-		<div className={`${SURFACE_CLASS} relative overflow-hidden p-6`}>
+		<div className={`${C.SURFACE_CLASS} relative overflow-hidden p-6`}>
 			<div
 				className="absolute inset-0 -z-0"
 				style={{
@@ -329,7 +326,7 @@ export default function AdminDashboard() {
 					)}
 				</section>
 
-				<section className={`${SURFACE_CLASS} overflow-hidden p-6`}>
+				<section className={`${C.SURFACE_CLASS} overflow-hidden p-6`}>
 					<div className="mb-4 flex items-center gap-2">
 						<ShieldCheck className="h-4 w-4 text-[#8B5CF6]" />
 						<h2 className="text-xl font-light text-[#FFFFFF]">Platform Signals</h2>
@@ -357,7 +354,7 @@ export default function AdminDashboard() {
 				</section>
 
 				<section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-					<div className={`${SURFACE_CLASS} overflow-hidden`}>
+					<div className={`${C.SURFACE_CLASS} overflow-hidden`}>
 						<div className="flex items-center gap-3 border-b border-[rgba(139,92,246,0.08)] px-6 py-5">
 							<h2 className="text-xl font-light text-[#FFFFFF]">Payment Activity</h2>
 							<div className="inline-flex items-center gap-2 rounded-full border border-[rgba(34,197,94,0.25)] bg-[rgba(34,197,94,0.08)] px-3 py-1">
@@ -410,7 +407,7 @@ export default function AdminDashboard() {
 						)}
 					</div>
 
-					<div className={`${SURFACE_CLASS} overflow-hidden`}>
+					<div className={`${C.SURFACE_CLASS} overflow-hidden`}>
 						<div className="border-b border-[rgba(139,92,246,0.08)] px-6 py-5">
 							<h2 className="text-xl font-light text-[#FFFFFF]">Access Activity</h2>
 						</div>
@@ -449,7 +446,7 @@ export default function AdminDashboard() {
 					</div>
 				</section>
 
-				<section className={`${SURFACE_CLASS} p-6`}>
+				<section className={`${C.SURFACE_CLASS} p-6`}>
 					<h2 className="mb-4 text-xl font-light text-[#FFFFFF]">Platform Health</h2>
 					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 						{[
