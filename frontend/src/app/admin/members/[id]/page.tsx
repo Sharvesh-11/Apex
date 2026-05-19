@@ -72,11 +72,29 @@ const timeFormatter = new Intl.DateTimeFormat('en-IN', {
 
 const today = new Date().toISOString().slice(0, 10);
 
+const SURFACE_CLASS =
+  'rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)] backdrop-blur-[24px]';
+
+const FIELD_CLASS =
+  'w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary';
+
 const tabLabels: Array<{ key: TabKey; label: string }> = [
   { key: 'subscription', label: 'Subscription' },
   { key: 'payments', label: 'Payments' },
   { key: 'attendance', label: 'Attendance' },
 ];
+
+function getInitials(name?: string) {
+  if (!name) return 'NA';
+  return (
+    name
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('') || 'NA'
+  );
+}
 
 function getDaysRemaining(endDate: string) {
   const end = new Date(endDate);
@@ -97,7 +115,7 @@ function getPercentageThrough(startDate: string, endDate: string) {
 
 function Badge({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${className}`}>
+    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium tracking-wide ${className}`}>
       {children}
     </span>
   );
@@ -114,13 +132,13 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="w-full max-w-2xl rounded-xl border border-accent bg-surface p-6 shadow-2xl">
+      <div className={`w-full max-w-2xl p-6 shadow-2xl ${SURFACE_CLASS}`}>
         <div className="mb-6 flex items-center justify-between gap-4">
-          <h3 className="text-xl font-semibold text-textPrimary">{title}</h3>
+          <h3 className="text-xl font-light text-textPrimary">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-2 text-textSecondary hover:text-textPrimary"
+            className="rounded-xl border border-[rgba(139,92,246,0.2)] px-3 py-1 text-textSecondary transition-colors hover:text-textPrimary"
             aria-label="Close modal"
           >
             ×
@@ -293,16 +311,23 @@ export default function AdminMemberDetailPage() {
     }).length;
   }, [attendance]);
 
+  const totalPaymentVolume = useMemo(
+    () => payments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0),
+    [payments]
+  );
+
+  const memberInitials = getInitials(member?.full_name);
+
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-10 animate-pulse rounded-lg bg-surface" />
+        <div className="h-10 animate-pulse rounded-xl bg-[rgba(139,92,246,0.1)]" />
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-xl border border-accent bg-surface p-6">
-            <div className="h-48 animate-pulse rounded-lg bg-background/60" />
+          <div className={`${SURFACE_CLASS} p-6`}>
+            <div className="h-48 animate-pulse rounded-xl bg-[rgba(139,92,246,0.1)]" />
           </div>
-          <div className="rounded-xl border border-accent bg-surface p-6">
-            <div className="h-48 animate-pulse rounded-lg bg-background/60" />
+          <div className={`${SURFACE_CLASS} p-6`}>
+            <div className="h-48 animate-pulse rounded-xl bg-[rgba(139,92,246,0.1)]" />
           </div>
         </div>
       </div>
@@ -311,7 +336,7 @@ export default function AdminMemberDetailPage() {
 
   if (error || !member) {
     return (
-      <div className="rounded-xl border border-accent bg-surface p-6 text-textSecondary">
+      <div className={`${SURFACE_CLASS} p-6 text-textSecondary`}>
         {error ?? 'Member not found'}
       </div>
     );
@@ -379,46 +404,56 @@ export default function AdminMemberDetailPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Back */}
+    <div className="relative space-y-6">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -right-16 -top-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.07)_0%,transparent_70%)]" />
+        <div className="absolute -bottom-24 -left-20 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.05)_0%,transparent_70%)]" />
+      </div>
+
       <div className="flex items-center gap-3">
         <Link
           href="/admin/members"
-          className="inline-flex items-center gap-2 rounded-lg border border-accent px-3 py-2 text-sm text-textSecondary hover:text-textPrimary"
+          className="inline-flex items-center gap-2 rounded-xl border border-[rgba(139,92,246,0.2)] bg-[rgba(3,0,20,0.55)] px-3.5 py-2 text-sm text-[#D8CCFF] transition-colors hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
       </div>
 
-      {/* Top cards */}
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* Member info */}
-        <div className="rounded-xl border border-accent bg-surface p-6 space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-textPrimary">{member.full_name}</h1>
-                <Badge
-                  className={
-                    member.is_active
-                      ? 'bg-green-400/10 text-green-400'
-                      : 'bg-red-400/10 text-red-400'
-                  }
-                >
-                  {member.is_active ? 'Active' : 'Inactive'}
-                </Badge>
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <section className={`${SURFACE_CLASS} relative overflow-hidden p-6`}>
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(139,92,246,0.11),transparent_55%)]" />
+
+          <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[rgba(139,92,246,0.3)] bg-[rgba(139,92,246,0.2)] text-xl font-medium text-white">
+                {memberInitials}
               </div>
-              <div className="mt-3 space-y-2 text-textSecondary">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" /> {member.email}
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-3xl font-light text-textPrimary md:text-[2rem]">{member.full_name}</h1>
+                  <Badge
+                    className={
+                      member.is_active
+                        ? 'border-green-300/20 bg-[rgba(34,197,94,0.16)] text-green-300'
+                        : 'border-red-300/20 bg-[rgba(239,68,68,0.16)] text-red-300'
+                    }
+                  >
+                    {member.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-primary" /> {member.phone || '—'}
-                </div>
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-primary" /> Joined{' '}
-                  {dateFormatter.format(new Date(member.joined_at))}
+
+                <div className="mt-3 grid gap-2 text-sm text-[#D8CCFF]">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-[#8B5CF6]" /> {member.email}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-[#8B5CF6]" /> {member.phone || '—'}
+                  </div>
+                  <div className="flex items-center gap-2 text-[#A995DE]">
+                    <CalendarDays className="h-4 w-4 text-[#8B5CF6]" /> Joined{' '}
+                    {dateFormatter.format(new Date(member.joined_at))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -426,7 +461,7 @@ export default function AdminMemberDetailPage() {
             <button
               type="button"
               onClick={() => setIsEditing((state) => !state)}
-              className="inline-flex items-center gap-2 rounded-lg border border-accent px-4 py-2 text-sm text-textSecondary hover:text-textPrimary"
+              className="inline-flex items-center gap-2 rounded-xl border border-[rgba(139,92,246,0.24)] bg-[rgba(139,92,246,0.1)] px-4 py-2 text-sm text-[#D8CCFF] transition-colors hover:text-white"
             >
               <Pencil className="h-4 w-4" />
               Edit member
@@ -434,7 +469,7 @@ export default function AdminMemberDetailPage() {
           </div>
 
           {isEditing ? (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="relative z-10 mt-5 grid gap-4 rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(3,0,20,0.48)] p-4 md:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm text-textSecondary">Name</label>
                 <input
@@ -442,7 +477,7 @@ export default function AdminMemberDetailPage() {
                   onChange={(event) =>
                     setEditForm((current) => ({ ...current, full_name: event.target.value }))
                   }
-                  className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary"
+                  className={FIELD_CLASS}
                 />
               </div>
               <div>
@@ -452,14 +487,14 @@ export default function AdminMemberDetailPage() {
                   onChange={(event) =>
                     setEditForm((current) => ({ ...current, phone: event.target.value }))
                   }
-                  className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary"
+                  className={FIELD_CLASS}
                 />
               </div>
               <div className="md:col-span-2 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="rounded-lg border border-accent px-4 py-2 text-textSecondary hover:text-textPrimary"
+                  className="rounded-xl border border-[rgba(139,92,246,0.2)] px-4 py-2 text-textSecondary transition-colors hover:text-textPrimary"
                 >
                   Cancel
                 </button>
@@ -467,30 +502,50 @@ export default function AdminMemberDetailPage() {
                   type="button"
                   onClick={handleSaveMember}
                   disabled={saving}
-                  className="rounded-lg bg-primary px-4 py-2 text-textPrimary hover:bg-primaryHover disabled:opacity-60"
+                  className="rounded-xl bg-primary px-4 py-2 text-textPrimary transition-colors hover:bg-primaryHover disabled:opacity-60"
                 >
                   {saving ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>
           ) : null}
-        </div>
+        </section>
 
-        
+        <section className={`${SURFACE_CLASS} p-5`}>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(3,0,20,0.45)] p-3">
+              <div className="text-xs uppercase tracking-[0.12em] text-[#8E7CC3]">Subscription</div>
+              <div className="mt-2 text-sm text-white">{currentSubscription?.plan?.name ?? 'No active plan'}</div>
+            </div>
+            <div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(3,0,20,0.45)] p-3">
+              <div className="text-xs uppercase tracking-[0.12em] text-[#8E7CC3]">Days Remaining</div>
+              <div className={`mt-2 text-xl font-light ${currentSubscriptionDaysRemaining <= 3 ? 'text-red-300' : 'text-white'}`}>
+                {currentSubscription ? currentSubscriptionDaysRemaining : '-'}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(3,0,20,0.45)] p-3">
+              <div className="text-xs uppercase tracking-[0.12em] text-[#8E7CC3]">Payment Volume</div>
+              <div className="mt-2 text-xl font-light text-white">{currencyFormatter.format(totalPaymentVolume)}</div>
+            </div>
+            <div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(3,0,20,0.45)] p-3">
+              <div className="text-xs uppercase tracking-[0.12em] text-[#8E7CC3]">Check-ins / Month</div>
+              <div className="mt-2 text-xl font-light text-white">{totalCheckinsThisMonth}</div>
+            </div>
+          </div>
+        </section>
       </div>
 
-      {/* Tabs */}
-      <div className="rounded-xl border border-accent bg-surface p-2">
+      <div className={`${SURFACE_CLASS} p-2`}>
         <div className="flex flex-wrap gap-2">
           {tabLabels.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.key
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-textSecondary hover:text-textPrimary'
+                  ? 'bg-[rgba(139,92,246,0.2)] text-[#D8CCFF] shadow-[0_0_0_1px_rgba(139,92,246,0.24)_inset]'
+                  : 'text-[#A995DE] hover:bg-[rgba(139,92,246,0.1)] hover:text-white'
               }`}
             >
               {tab.label}
@@ -503,21 +558,21 @@ export default function AdminMemberDetailPage() {
       {activeTab === 'subscription' ? (
         <div className="space-y-6">
           {currentSubscription ? (
-            <div className="rounded-xl border border-accent bg-surface p-6">
+            <div className={`${SURFACE_CLASS} p-6`}>
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-sm text-textSecondary">Current Active Subscription</div>
-                  <div className="mt-1 text-2xl font-semibold text-textPrimary">
+                  <div className="text-sm text-[#8E7CC3]">Current Active Subscription</div>
+                  <div className="mt-1 text-2xl font-light text-textPrimary">
                     {currentSubscription.plan?.name}
                   </div>
-                  <div className="mt-2 text-textSecondary">
+                  <div className="mt-2 text-[#D8CCFF]">
                     {`${currentSubscription.plan.billing_cycle} • ${dateFormatter.format(
                       new Date(currentSubscription.start_date),
                     )} - ${dateFormatter.format(new Date(currentSubscription.end_date))}`}
                   </div>
                   <div
                     className={`mt-3 text-sm font-medium ${
-                      currentSubscriptionDaysRemaining <= 3 ? 'text-red-400' : 'text-textSecondary'
+                      currentSubscriptionDaysRemaining <= 3 ? 'text-red-300' : 'text-[#8E7CC3]'
                     }`}
                   >
                     {currentSubscriptionDaysRemaining} day{currentSubscriptionDaysRemaining === 1 ? '' : 's'} remaining
@@ -527,18 +582,18 @@ export default function AdminMemberDetailPage() {
                 <button
                   type="button"
                   onClick={() => setIsSubscriptionModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-textPrimary hover:bg-primaryHover"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-textPrimary transition-colors hover:bg-primaryHover"
                 >
                   <Plus className="h-4 w-4" /> Add New Subscription
                 </button>
               </div>
 
               <div className="mt-6">
-                <div className="mb-2 flex items-center justify-between text-sm text-textSecondary">
+                <div className="mb-2 flex items-center justify-between text-sm text-[#8E7CC3]">
                   <span>Subscription progress</span>
                   <span>{currentSubscriptionProgress}%</span>
                 </div>
-                <div className="h-3 rounded-full bg-background">
+                <div className="h-3 rounded-full bg-[rgba(3,0,20,0.7)]">
                   <div
                     className="h-3 rounded-full bg-primary transition-all"
                     style={{ width: `${currentSubscriptionProgress}%` }}
@@ -547,14 +602,14 @@ export default function AdminMemberDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-surface border border-accent rounded-xl p-6">
-              <div className="text-lg font-semibold text-textPrimary">No active subscription</div>
-              <div className="mt-2 text-textSecondary">Use 'Add New Subscription' to assign a plan</div>
+            <div className={`${SURFACE_CLASS} p-6`}>
+              <div className="text-lg font-light text-textPrimary">No active subscription</div>
+              <div className="mt-2 text-[#8E7CC3]">Use Add New Subscription to assign a plan</div>
               <div className="mt-4">
                 <button
                   type="button"
                   onClick={() => setIsSubscriptionModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-textPrimary hover:bg-primaryHover"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-textPrimary transition-colors hover:bg-primaryHover"
                 >
                   <Plus className="h-4 w-4" /> Add New Subscription
                 </button>
@@ -562,82 +617,70 @@ export default function AdminMemberDetailPage() {
             </div>
           )}
 
-          <div className="overflow-hidden rounded-xl border border-accent bg-surface">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-accent text-textSecondary">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Plan</th>
-                  <th className="px-4 py-3 font-medium">Billing Cycle</th>
-                  <th className="px-4 py-3 font-medium">Start Date</th>
-                  <th className="px-4 py-3 font-medium">End Date</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {subscriptions.length > 0 ? (
-                  subscriptions.map((subscription) => (
-                    <tr key={subscription.id} className="border-b border-accent/50 last:border-b-0">
-                      <td className="px-4 py-3 text-textPrimary">{subscription.plan.name}</td>
-                      <td className="px-4 py-3 text-textSecondary">
+          <div className={`${SURFACE_CLASS} space-y-3 p-3 md:p-4`}>
+            {subscriptions.length > 0 ? (
+              subscriptions.map((subscription) => (
+                <article
+                  key={subscription.id}
+                  className="rounded-2xl border border-[rgba(139,92,246,0.12)] bg-[linear-gradient(135deg,rgba(16,6,35,0.72),rgba(8,2,25,0.9))] p-4 transition-all duration-200 hover:border-[rgba(139,92,246,0.24)]"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-base font-medium text-white">{subscription.plan.name}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.12em] text-[#8E7CC3]">
                         {subscription.plan.billing_cycle}
-                      </td>
-                      <td className="px-4 py-3 text-textSecondary">
-                        {dateFormatter.format(new Date(subscription.start_date))}
-                      </td>
-                      <td className="px-4 py-3 text-textSecondary">
-                        {dateFormatter.format(new Date(subscription.end_date))}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          className={
-                            subscription.status === 'active'
-                              ? 'bg-green-400/10 text-green-400'
-                              : 'bg-textSecondary/10 text-textSecondary'
-                          }
+                      </p>
+                      <p className="mt-2 text-sm text-[#D8CCFF]">
+                        {dateFormatter.format(new Date(subscription.start_date))} - {dateFormatter.format(new Date(subscription.end_date))}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge
+                        className={
+                          subscription.status === 'active'
+                            ? 'border-green-300/20 bg-[rgba(34,197,94,0.16)] text-green-300'
+                            : 'border-[rgba(142,124,195,0.25)] bg-[rgba(142,124,195,0.12)] text-[#D8CCFF]'
+                        }
+                      >
+                        {subscription.status}
+                      </Badge>
+
+                      {subscription.status === 'active' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelSubscription(subscription.id)}
+                          disabled={processingCancelId === subscription.id}
+                          className="rounded-xl border border-red-300/25 px-3 py-1.5 text-sm text-red-300 transition-colors hover:bg-red-400/10 disabled:opacity-60"
                         >
-                          {subscription.status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        {subscription.status === 'active' ? (
-                          <button
-                            type="button"
-                            onClick={() => handleCancelSubscription(subscription.id)}
-                            disabled={processingCancelId === subscription.id}
-                            className="text-red-400 border border-red-400 hover:bg-red-400/10 rounded-lg px-3 py-1 text-sm disabled:opacity-60"
-                          >
-                            {processingCancelId === subscription.id ? 'Cancelling...' : 'Cancel'}
-                          </button>
-                        ) : subscription.status === 'cancelled' ? (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSubscriptionLog(subscription.id)}
-                            disabled={processingDeleteId === subscription.id}
-                            className="inline-flex items-center text-textSecondary hover:text-red-400 rounded-lg px-3 py-1 text-sm disabled:opacity-60"
-                          >
-                            {processingDeleteId === subscription.id ? (
-                              'Deleting...'
-                            ) : (
-                              <>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Log
-                              </>
-                            )}
-                          </button>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-textSecondary">
-                      No subscription history found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                          {processingCancelId === subscription.id ? 'Cancelling...' : 'Cancel'}
+                        </button>
+                      ) : subscription.status === 'cancelled' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSubscriptionLog(subscription.id)}
+                          disabled={processingDeleteId === subscription.id}
+                          className="inline-flex items-center rounded-xl border border-[rgba(139,92,246,0.18)] px-3 py-1.5 text-sm text-[#D8CCFF] transition-colors hover:text-red-300 disabled:opacity-60"
+                        >
+                          {processingDeleteId === subscription.id ? (
+                            'Deleting...'
+                          ) : (
+                            <>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Log
+                            </>
+                          )}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-[rgba(139,92,246,0.12)] bg-[rgba(3,0,20,0.52)] px-6 py-10 text-center text-[#8E7CC3]">
+                No subscription history found
+              </div>
+            )}
           </div>
         </div>
       ) : null}
@@ -645,74 +688,62 @@ export default function AdminMemberDetailPage() {
       {/* Payments tab */}
       {activeTab === 'payments' ? (
         <div className="space-y-6">
-          <div className="flex items-center justify-between rounded-xl border border-accent bg-surface p-6">
-            <h2 className="text-xl font-semibold text-textPrimary">Payments</h2>
+          <div className={`${SURFACE_CLASS} flex items-center justify-between p-6`}>
+            <h2 className="text-xl font-light text-textPrimary">Payments</h2>
             <button
               type="button"
               onClick={() => setIsCashModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-textPrimary hover:bg-primaryHover"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-textPrimary transition-colors hover:bg-primaryHover"
             >
               <Wallet className="h-4 w-4" /> Log Cash Payment
             </button>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-accent bg-surface">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-accent text-textSecondary">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Amount</th>
-                  <th className="px-4 py-3 font-medium">Method</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium">Date</th>
-                  <th className="px-4 py-3 font-medium">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.length > 0 ? (
-                  payments.map((payment) => (
-                    <tr key={payment.id} className="border-b border-accent/50 last:border-b-0">
-                      <td className="px-4 py-3 text-textPrimary">
-                        {currencyFormatter.format(Number(payment.amount))}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          className={
-                            payment.payment_method === 'cash'
-                              ? 'bg-yellow-400/10 text-yellow-400'
-                              : 'bg-blue-400/10 text-blue-400'
-                          }
-                        >
-                          {payment.payment_method}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          className={
-                            payment.payment_status === 'completed'
-                              ? 'bg-green-400/10 text-green-400'
-                              : payment.payment_status === 'failed'
-                                ? 'bg-red-400/10 text-red-400'
-                                : 'bg-textSecondary/10 text-textSecondary'
-                          }
-                        >
-                          {payment.payment_status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-textSecondary">
-                        {dateFormatter.format(new Date(payment.paid_at ?? payment.created_at))}
-                      </td>
-                      <td className="px-4 py-3 text-textSecondary">{payment.notes || '—'}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-10 text-center text-textSecondary">
-                      No payments recorded
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className={`${SURFACE_CLASS} space-y-3 p-3 md:p-4`}>
+            {payments.length > 0 ? (
+              payments.map((payment) => (
+                <article
+                  key={payment.id}
+                  className="rounded-2xl border border-[rgba(139,92,246,0.12)] bg-[linear-gradient(135deg,rgba(16,6,35,0.72),rgba(8,2,25,0.9))] p-4 transition-all duration-200 hover:border-[rgba(139,92,246,0.24)]"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-lg font-light text-white">{currencyFormatter.format(Number(payment.amount))}</p>
+                      <p className="mt-1 text-sm text-[#A995DE]">{dateFormatter.format(new Date(payment.paid_at ?? payment.created_at))}</p>
+                      <p className="mt-2 text-sm text-[#D8CCFF]">{payment.notes || 'No notes'}</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge
+                        className={
+                          payment.payment_method === 'cash'
+                            ? 'border-yellow-300/20 bg-[rgba(250,204,21,0.15)] text-yellow-300'
+                            : 'border-blue-300/20 bg-[rgba(96,165,250,0.14)] text-blue-300'
+                        }
+                      >
+                        {payment.payment_method}
+                      </Badge>
+
+                      <Badge
+                        className={
+                          payment.payment_status === 'completed'
+                            ? 'border-green-300/20 bg-[rgba(34,197,94,0.16)] text-green-300'
+                            : payment.payment_status === 'failed'
+                              ? 'border-red-300/20 bg-[rgba(239,68,68,0.14)] text-red-300'
+                              : 'border-[rgba(142,124,195,0.25)] bg-[rgba(142,124,195,0.12)] text-[#D8CCFF]'
+                        }
+                      >
+                        {payment.payment_status}
+                      </Badge>
+                    </div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-[rgba(139,92,246,0.12)] bg-[rgba(3,0,20,0.52)] px-6 py-10 text-center text-[#8E7CC3]">
+                No payments recorded
+              </div>
+            )}
           </div>
         </div>
       ) : null}
@@ -720,28 +751,28 @@ export default function AdminMemberDetailPage() {
       {/* Attendance tab */}
       {activeTab === 'attendance' ? (
         <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
-          <div className="rounded-xl border border-accent bg-surface p-6">
-            <h2 className="text-xl font-semibold text-textPrimary">Last 10 Check-Ins</h2>
+          <div className={`${SURFACE_CLASS} p-6`}>
+            <h2 className="text-xl font-light text-textPrimary">Last 10 Check-Ins</h2>
             <div className="mt-5 space-y-3">
               {attendance.length > 0 ? (
                 attendance.slice(0, 10).map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between rounded-lg border border-accent px-4 py-3"
+                    className="flex items-center justify-between rounded-xl border border-[rgba(139,92,246,0.14)] bg-[rgba(3,0,20,0.52)] px-4 py-3 transition-colors hover:border-[rgba(139,92,246,0.24)]"
                   >
                     <div>
                       <div className="text-textPrimary">
                         {dateFormatter.format(new Date(entry.checked_in_at))}
                       </div>
-                      <div className="text-sm text-textSecondary">
+                      <div className="text-sm text-[#8E7CC3]">
                         {timeFormatter.format(new Date(entry.checked_in_at))}
                       </div>
                     </div>
                     <Badge
                       className={
                         entry.method === 'qr'
-                          ? 'bg-primary/10 text-primary'
-                          : 'bg-yellow-400/10 text-yellow-400'
+                          ? 'border-[rgba(139,92,246,0.25)] bg-[rgba(139,92,246,0.16)] text-[#D8CCFF]'
+                          : 'border-yellow-300/20 bg-[rgba(250,204,21,0.15)] text-yellow-300'
                       }
                     >
                       {entry.method}
@@ -749,14 +780,17 @@ export default function AdminMemberDetailPage() {
                   </div>
                 ))
               ) : (
-                <div className="text-textSecondary">No attendance records found</div>
+                <div className="rounded-xl border border-[rgba(139,92,246,0.12)] bg-[rgba(3,0,20,0.52)] px-5 py-8 text-[#8E7CC3]">
+                  No attendance records found
+                </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-xl border border-accent bg-surface p-6">
-            <div className="text-sm text-textSecondary">Check-ins this month</div>
-            <div className="mt-2 text-4xl font-bold text-textPrimary">{totalCheckinsThisMonth}</div>
+          <div className={`${SURFACE_CLASS} relative overflow-hidden p-6`}>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_25%,rgba(34,197,94,0.07),transparent_65%)]" />
+            <div className="relative z-10 text-sm text-[#8E7CC3]">Check-ins this month</div>
+            <div className="relative z-10 mt-2 text-4xl font-light text-textPrimary">{totalCheckinsThisMonth}</div>
           </div>
         </div>
       ) : null}
@@ -776,7 +810,7 @@ export default function AdminMemberDetailPage() {
                 onChange={(event) =>
                   setSubscriptionForm((current) => ({ ...current, plan_id: event.target.value }))
                 }
-                className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary"
+                className={FIELD_CLASS}
               >
                 <option value="">Select a plan</option>
                 {plans.map((plan) => (
@@ -798,7 +832,7 @@ export default function AdminMemberDetailPage() {
                     start_date: event.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary"
+                className={FIELD_CLASS}
               />
             </div>
 
@@ -806,14 +840,14 @@ export default function AdminMemberDetailPage() {
               <button
                 type="button"
                 onClick={() => setIsSubscriptionModalOpen(false)}
-                className="rounded-lg border border-accent px-4 py-2 text-textSecondary hover:text-textPrimary"
+                className="rounded-xl border border-[rgba(139,92,246,0.2)] px-4 py-2 text-textSecondary transition-colors hover:text-textPrimary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={modalSaving}
-                className="rounded-lg bg-primary px-4 py-2 text-textPrimary hover:bg-primaryHover disabled:opacity-60"
+                className="rounded-xl bg-primary px-4 py-2 text-textPrimary transition-colors hover:bg-primaryHover disabled:opacity-60"
               >
                 {modalSaving ? 'Saving...' : 'Create Subscription'}
               </button>
@@ -835,7 +869,7 @@ export default function AdminMemberDetailPage() {
                 onChange={(event) =>
                   setCashForm((current) => ({ ...current, amount: event.target.value }))
                 }
-                className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary"
+                className={FIELD_CLASS}
               />
             </div>
             <div>
@@ -845,7 +879,7 @@ export default function AdminMemberDetailPage() {
                 onChange={(event) =>
                   setCashForm((current) => ({ ...current, notes: event.target.value }))
                 }
-                className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary"
+                className={FIELD_CLASS}
                 rows={4}
               />
             </div>
@@ -853,14 +887,14 @@ export default function AdminMemberDetailPage() {
               <button
                 type="button"
                 onClick={() => setIsCashModalOpen(false)}
-                className="rounded-lg border border-accent px-4 py-2 text-textSecondary hover:text-textPrimary"
+                className="rounded-xl border border-[rgba(139,92,246,0.2)] px-4 py-2 text-textSecondary transition-colors hover:text-textPrimary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={modalSaving}
-                className="rounded-lg bg-primary px-4 py-2 text-textPrimary hover:bg-primaryHover disabled:opacity-60"
+                className="rounded-xl bg-primary px-4 py-2 text-textPrimary transition-colors hover:bg-primaryHover disabled:opacity-60"
               >
                 {modalSaving ? 'Saving...' : 'Record Payment'}
               </button>

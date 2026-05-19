@@ -2,7 +2,21 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Eye, UserX, Search, Plus, X, ChevronDown, ShieldCheck } from 'lucide-react';
+import {
+  Eye,
+  UserX,
+  Search,
+  Plus,
+  X,
+  ChevronDown,
+  ShieldCheck,
+  Users,
+  UserCheck,
+  UserMinus,
+  Crown,
+  Shield,
+  Sparkles,
+} from 'lucide-react';
 
 import * as apiClient from '@/lib/api';
 import type { Member, Plan, Subscription } from '@/types';
@@ -35,6 +49,9 @@ const initialFormState: AddMemberFormState = {
 };
 
 const memberSkeletons = Array.from({ length: 6 });
+
+const SURFACE_CLASS =
+  'rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)] backdrop-blur-[24px]';
 
 function generateStrongPassword() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
@@ -127,6 +144,36 @@ export default function AdminMembersPage() {
       return matchesSearch && matchesFilter;
     });
   }, [members, search, selectedFilter]);
+
+  const platformStats = useMemo(() => {
+    const now = Date.now();
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+
+    let activeMembers = 0;
+    let owners = 0;
+    let admins = 0;
+    let recentlyJoined = 0;
+
+    for (const member of members) {
+      const role = member.role ?? 'gym_member';
+      const isActive = getInitialFilter(member) === 'active';
+      const joinedAt = new Date(member.joined_at).getTime();
+
+      if (isActive) activeMembers += 1;
+      if (role === 'gym_owner') owners += 1;
+      if (role === 'admin') admins += 1;
+      if (!Number.isNaN(joinedAt) && joinedAt >= sevenDaysAgo) recentlyJoined += 1;
+    }
+
+    return {
+      totalMembers: members.length,
+      activeMembers,
+      inactiveMembers: Math.max(0, members.length - activeMembers),
+      owners,
+      admins,
+      recentlyJoined,
+    };
+  }, [members]);
 
   const activePlanOptions = plans.filter((plan) => plan.is_active !== false);
 
@@ -222,16 +269,66 @@ export default function AdminMembersPage() {
     }
   };
 
+  const statCards = [
+    {
+      key: 'total',
+      label: 'Total Members',
+      value: platformStats.totalMembers,
+      icon: <Users className="h-4 w-4" />,
+      glow: 'rgba(139,92,246,0.08)',
+    },
+    {
+      key: 'active',
+      label: 'Active Members',
+      value: platformStats.activeMembers,
+      icon: <UserCheck className="h-4 w-4" />,
+      glow: 'rgba(34,197,94,0.08)',
+    },
+    {
+      key: 'inactive',
+      label: 'Inactive Members',
+      value: platformStats.inactiveMembers,
+      icon: <UserMinus className="h-4 w-4" />,
+      glow: 'rgba(239,68,68,0.08)',
+    },
+    {
+      key: 'owners',
+      label: 'Owners',
+      value: platformStats.owners,
+      icon: <Crown className="h-4 w-4" />,
+      glow: 'rgba(139,92,246,0.08)',
+    },
+    {
+      key: 'admins',
+      label: 'Admins',
+      value: platformStats.admins,
+      icon: <Shield className="h-4 w-4" />,
+      glow: 'rgba(239,68,68,0.07)',
+    },
+    {
+      key: 'recent',
+      label: 'Recently Joined',
+      value: platformStats.recentlyJoined,
+      icon: <Sparkles className="h-4 w-4" />,
+      glow: 'rgba(96,165,250,0.08)',
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-8 pb-4">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -right-24 -top-20 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.09)_0%,transparent_70%)]" />
+        <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.06)_0%,transparent_70%)]" />
+      </div>
+
       {toast ? (
         <div
-          className={`fixed right-6 top-6 z-50 rounded-lg border px-4 py-3 shadow-lg ${
+          className={`fixed right-6 top-6 z-50 rounded-2xl border px-4 py-3 backdrop-blur-[16px] ${
             toast.type === 'success'
-              ? 'border-green-400/30 bg-green-400/10 text-green-400'
+              ? 'border-green-400/30 bg-green-400/12 text-green-300'
               : toast.type === 'error'
-                ? 'border-red-400/30 bg-red-400/10 text-red-400'
-                : 'border-accent bg-surface text-textPrimary'
+                ? 'border-red-400/30 bg-red-400/12 text-red-300'
+                : 'border-[rgba(139,92,246,0.18)] bg-[rgba(16,6,35,0.85)] text-textPrimary'
             }`}
         >
           {toast.message}
@@ -240,170 +337,229 @@ export default function AdminMembersPage() {
 
       {roleModalMember ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <form onSubmit={handleUpdateRole} className="w-full max-w-md rounded-xl border border-accent bg-surface p-6 shadow-xl">
+          <form onSubmit={handleUpdateRole} className={`w-full max-w-md p-6 shadow-xl ${SURFACE_CLASS}`}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-textPrimary">Update Role for {roleModalMember.full_name}</h3>
-              <button type="button" onClick={() => setRoleModalMember(null)} className="rounded p-2 text-textSecondary hover:text-textPrimary">
+              <h3 className="text-lg font-light text-textPrimary">Update Role for {roleModalMember.full_name}</h3>
+              <button type="button" onClick={() => setRoleModalMember(null)} className="rounded-xl border border-[rgba(139,92,246,0.2)] p-2 text-textSecondary transition-colors hover:text-textPrimary">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <label className="mb-1 block text-sm text-textSecondary">Select Role</label>
-            <select value={roleSelection} onChange={(e) => setRoleSelection(e.target.value)} className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary mb-4">
+            <select value={roleSelection} onChange={(e) => setRoleSelection(e.target.value)} className="mb-4 w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary">
               <option value="gym_member">Member</option>
               <option value="gym_owner">Owner</option>
               <option value="admin">Admin</option>
             </select>
 
             <div className="flex items-center justify-end gap-3">
-              <button type="button" onClick={() => setRoleModalMember(null)} className="rounded-lg border border-accent px-4 py-2 text-textSecondary hover:text-textPrimary">Cancel</button>
-              <button type="submit" disabled={isUpdatingRole} className="rounded-lg bg-primary px-4 py-2 text-textPrimary hover:bg-primaryHover disabled:opacity-60">{isUpdatingRole ? 'Updating...' : 'Update Role'}</button>
+              <button type="button" onClick={() => setRoleModalMember(null)} className="rounded-xl border border-[rgba(139,92,246,0.2)] px-4 py-2 text-textSecondary transition-colors hover:text-textPrimary">Cancel</button>
+              <button type="submit" disabled={isUpdatingRole} className="rounded-xl bg-primary px-4 py-2 text-textPrimary transition-colors hover:bg-primaryHover disabled:opacity-60">{isUpdatingRole ? 'Updating...' : 'Update Role'}</button>
             </div>
           </form>
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-textPrimary">Members</h1>
+      <div className={`p-5 md:p-6 ${SURFACE_CLASS}`}>
+        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-light tracking-wide text-textPrimary md:text-3xl">Platform Members</h1>
+            <p className="mt-1 text-sm text-[#8E7CC3]">Live ecosystem operator console for identity and access control.</p>
+          </div>
+          <button
+            type="button"
+            onClick={openAddMemberModal}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[rgba(139,92,246,0.35)] bg-[linear-gradient(135deg,rgba(139,92,246,0.35),rgba(139,92,246,0.18))] px-4 py-2.5 text-sm font-medium text-white shadow-[0_10px_30px_rgba(139,92,246,0.25)] transition-transform hover:scale-[1.01]"
+          >
+            <Plus className="h-4 w-4" />
+            Add Member
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={openAddMemberModal}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-textPrimary hover:bg-primaryHover"
-        >
-          <Plus className="h-4 w-4" />
-          Add Member
-        </button>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="relative w-full">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8E7CC3]" />
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by name or email"
+              className="w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.65)] py-3 pl-11 pr-4 text-textPrimary outline-none placeholder:text-[#8E7CC3] transition-colors focus:border-primary"
+            />
+          </div>
+
+          <div className="inline-flex w-full rounded-xl border border-[rgba(139,92,246,0.16)] bg-[rgba(3,0,20,0.65)] p-1 lg:w-auto">
+            {(['all', 'active', 'inactive'] as const).map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setSelectedFilter(filter)}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium capitalize transition-all lg:flex-none ${
+                  selectedFilter === filter
+                    ? 'bg-[rgba(139,92,246,0.2)] text-[#D8CCFF] shadow-[0_0_0_1px_rgba(139,92,246,0.15)_inset]'
+                    : 'text-[#8E7CC3] hover:text-textPrimary'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-textSecondary" />
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search members by name or email"
-            className="w-full rounded-lg border border-accent bg-surface py-2 pl-10 pr-4 text-textPrimary outline-none placeholder:text-textSecondary focus:border-primary"
-          />
-        </div>
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-6">
+        {statCards.map((card) => (
+          <div key={card.key} className={`${SURFACE_CLASS} relative overflow-hidden p-4`}>
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background: `radial-gradient(110px 70px at 30% 25%, ${card.glow}, transparent 70%)`,
+              }}
+            />
+            <div className="relative z-10 flex items-center justify-between">
+              <span className="inline-flex rounded-lg border border-[rgba(139,92,246,0.2)] bg-[rgba(139,92,246,0.08)] p-2 text-[#D8CCFF]">
+                {card.icon}
+              </span>
+            </div>
+            <p className="relative z-10 mt-4 text-3xl font-light text-white">{loading ? '...' : card.value}</p>
+            <p className="relative z-10 mt-1 text-xs uppercase tracking-[0.15em] text-[#8E7CC3]">{card.label}</p>
+          </div>
+        ))}
+      </section>
 
-        <div className="inline-flex rounded-lg border border-accent bg-surface p-1">
-          {(['all', 'active', 'inactive'] as const).map((filter) => (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => setSelectedFilter(filter)}
-              className={`rounded-md px-4 py-2 text-sm font-medium capitalize transition-colors ${
-                selectedFilter === filter
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-textSecondary hover:text-textPrimary'
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
-      </div>
+      {error ? <div className={`${SURFACE_CLASS} p-4 text-textSecondary`}>{error}</div> : null}
 
-      {error ? <div className="rounded-lg border border-accent bg-surface p-4 text-textSecondary">{error}</div> : null}
+      <section className={`${SURFACE_CLASS} p-3 md:p-4`}>
+        <div className="max-h-[62vh] space-y-2 overflow-y-auto pr-1">
+          {loading
+            ? memberSkeletons.map((_, index) => (
+                <div
+                  key={index}
+                  className="rounded-2xl border border-[rgba(139,92,246,0.1)] bg-[rgba(3,0,20,0.55)] p-4"
+                >
+                  <div className="grid animate-pulse gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                    <div className="h-5 rounded bg-[rgba(139,92,246,0.15)]" />
+                    <div className="h-8 w-28 rounded bg-[rgba(139,92,246,0.12)]" />
+                  </div>
+                </div>
+              ))
+            : filteredMembers.length > 0
+              ? filteredMembers.map((member) => {
+                  const isActive = getInitialFilter(member) === 'active';
+                  const role = member.role ?? 'gym_member';
+                  const initials = member.full_name
+                    .split(' ')
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0]?.toUpperCase())
+                    .join('') || 'NA';
+                  const roleBadgeClass =
+                    role === 'gym_member'
+                      ? 'bg-[rgba(96,165,250,0.14)] text-blue-300 border-blue-300/20'
+                      : role === 'gym_owner'
+                        ? 'bg-[rgba(139,92,246,0.16)] text-[#D8CCFF] border-[rgba(139,92,246,0.25)]'
+                        : 'bg-[rgba(239,68,68,0.14)] text-red-300 border-red-300/20';
 
-      <div className="overflow-hidden rounded-xl border border-accent bg-surface">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-accent text-textSecondary">
-              <tr>
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Phone</th>
-                <th className="px-4 py-3 font-medium">Joined</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Role</th>
-                <th className="px-4 py-3 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading
-                ? memberSkeletons.map((_, index) => (
-                    <tr key={index} className="border-b border-accent/50 last:border-b-0">
-                      {Array.from({ length: 7 }).map((__, cellIndex) => (
-                        <td key={cellIndex} className="px-4 py-4">
-                          <div className="h-4 animate-pulse rounded bg-background/60" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                : filteredMembers.length > 0
-                ? filteredMembers.map((member) => {
-                    const isActive = getInitialFilter(member) === 'active';
-                    const role = member.role ?? 'gym_member';
-                    const roleBadge = role === 'gym_member' ? 'bg-blue-400/10 text-blue-400' : role === 'gym_owner' ? 'bg-primary/10 text-primary' : 'bg-red-400/10 text-red-400';
-                    return (
-                      <tr key={member.id} className="border-b border-accent/50 last:border-b-0">
-                        <td className="px-4 py-4 text-textPrimary">{member.full_name}</td>
-                        <td className="px-4 py-4 text-textSecondary">{member.email}</td>
-                        <td className="px-4 py-4 text-textSecondary">{member.phone || '—'}</td>
-                        <td className="px-4 py-4 text-textSecondary">{new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(member.joined_at))}</td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${isActive ? 'bg-green-400/10 text-green-400' : 'bg-red-400/10 text-red-400'}`}>
+                  return (
+                    <article
+                      key={member.id}
+                      className="group rounded-2xl border border-[rgba(139,92,246,0.1)] bg-[linear-gradient(135deg,rgba(16,6,35,0.7),rgba(7,2,22,0.86))] p-4 shadow-[0_8px_28px_rgba(0,0,0,0.24)] transition-all duration-200 hover:border-[rgba(139,92,246,0.24)] hover:bg-[linear-gradient(135deg,rgba(21,10,44,0.76),rgba(10,3,30,0.9))] hover:shadow-[0_12px_32px_rgba(139,92,246,0.16)]"
+                    >
+                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[rgba(139,92,246,0.24)] bg-[rgba(139,92,246,0.2)] text-sm font-medium text-white">
+                            {initials}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-medium text-white md:text-lg">{member.full_name}</p>
+                            <p className="truncate text-sm text-[#D8CCFF]">{member.email}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8E7CC3]">
+                              <span>{member.phone || 'No phone'}</span>
+                              <span className="hidden h-1 w-1 rounded-full bg-[rgba(142,124,195,0.6)] md:inline-block" />
+                              <span>
+                                Joined{' '}
+                                {new Intl.DateTimeFormat('en-IN', {
+                                  day: '2-digit',
+                                  month: 'short',
+                                  year: 'numeric',
+                                }).format(new Date(member.joined_at))}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                          <span
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium tracking-wide ${
+                              isActive
+                                ? 'border-green-300/20 bg-[rgba(34,197,94,0.16)] text-green-300 shadow-[0_0_18px_rgba(34,197,94,0.12)]'
+                                : 'border-red-300/20 bg-[rgba(239,68,68,0.14)] text-red-300'
+                            }`}
+                          >
                             {isActive ? 'Active' : 'Inactive'}
                           </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${roleBadge}`}>
+
+                          <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-medium tracking-wide ${roleBadgeClass}`}>
                             {role === 'gym_member' ? 'Member' : role === 'gym_owner' ? 'Owner' : 'Admin'}
                           </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <Link href={`/admin/members/${member.id}`} className="inline-flex items-center gap-2 text-primary hover:text-primaryHover">
+
+                          <div className="ml-0 inline-flex items-center gap-1 rounded-xl border border-[rgba(139,92,246,0.2)] bg-[rgba(3,0,20,0.5)] p-1 opacity-100 transition-all duration-200 md:ml-2 md:opacity-0 md:group-hover:opacity-100">
+                            <Link
+                              href={`/admin/members/${member.id}`}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#D8CCFF] transition-colors hover:bg-[rgba(139,92,246,0.2)] hover:text-white"
+                              aria-label="View member"
+                              title="View member"
+                            >
                               <Eye className="h-4 w-4" />
-                              View
                             </Link>
-                          {isActive ? (
+
+                            {isActive ? (
+                              <button
+                                type="button"
+                                onClick={() => handleDeactivate(member.id)}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#D8CCFF] transition-colors hover:bg-[rgba(239,68,68,0.2)] hover:text-red-300"
+                                aria-label="Deactivate member"
+                                title="Deactivate member"
+                              >
+                                <UserX className="h-4 w-4" />
+                              </button>
+                            ) : null}
+
                             <button
                               type="button"
-                              onClick={() => handleDeactivate(member.id)}
-                              className="inline-flex items-center gap-2 text-textSecondary hover:text-red-400"
+                              onClick={() => {
+                                setRoleModalMember(member);
+                                setRoleSelection(member.role ?? 'gym_member');
+                              }}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#D8CCFF] transition-colors hover:bg-[rgba(139,92,246,0.2)] hover:text-white"
+                              aria-label="Change role"
+                              title="Change role"
                             >
-                              <UserX className="h-4 w-4" />
-                              Deactivate
-                              </button>
-                          ) : null}
-
-                          {/* Change Role button */}
-                          <button type="button" onClick={() => { setRoleModalMember(member); setRoleSelection(member.role ?? 'gym_member'); }} className="inline-flex items-center gap-2 text-textSecondary hover:text-primary">
-                            <ShieldCheck className="h-4 w-4" />
-                            Change Role
-                          </button>
+                              <ShieldCheck className="h-4 w-4" />
+                            </button>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                : (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-textSecondary">
-                      No members found
-                    </td>
-                  </tr>
-                )}
-            </tbody>
-          </table>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })
+              : (
+                <div className="flex min-h-[220px] items-center justify-center rounded-2xl border border-[rgba(139,92,246,0.1)] bg-[rgba(3,0,20,0.5)] px-6 py-10 text-center text-[#8E7CC3]">
+                  No members found
+                </div>
+              )}
         </div>
-      </div>
+      </section>
 
       {isModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-          <div className="w-full max-w-2xl rounded-xl border border-accent bg-surface p-6 shadow-xl">
+          <div className={`w-full max-w-2xl p-6 shadow-xl ${SURFACE_CLASS}`}>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-textPrimary">Add Member</h2>
+              <h2 className="text-xl font-light text-textPrimary">Add Member</h2>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="rounded p-2 text-textSecondary hover:text-textPrimary"
+                className="rounded-xl border border-[rgba(139,92,246,0.2)] p-2 text-textSecondary transition-colors hover:text-textPrimary"
                 aria-label="Close modal"
               >
                 <X className="h-5 w-5" />
@@ -413,24 +569,24 @@ export default function AdminMembersPage() {
             <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
               <div className="md:col-span-2">
                 <label className="mb-1 block text-sm text-textSecondary">Full Name</label>
-                <input required value={form.full_name} onChange={(e) => setForm((current) => ({ ...current, full_name: e.target.value }))} className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary" />
+                <input required value={form.full_name} onChange={(e) => setForm((current) => ({ ...current, full_name: e.target.value }))} className="w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary" />
               </div>
 
               <div className="md:col-span-2">
                 <label className="mb-1 block text-sm text-textSecondary">Email</label>
-                <input required type="email" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary" />
+                <input required type="email" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} className="w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary" />
               </div>
 
               <div>
                 <label className="mb-1 block text-sm text-textSecondary">Phone</label>
-                <input value={form.phone} onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))} className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary" />
+                <input value={form.phone} onChange={(e) => setForm((current) => ({ ...current, phone: e.target.value }))} className="w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary" />
               </div>
 
               <div>
                 <label className="mb-1 block text-sm text-textSecondary">Password</label>
                 <div className="flex gap-2">
-                  <input required value={form.password} onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))} className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary" />
-                  <button type="button" onClick={() => setForm((current) => ({ ...current, password: generateStrongPassword() }))} className="rounded-lg border border-accent px-3 py-2 text-textSecondary hover:text-textPrimary">
+                  <input required value={form.password} onChange={(e) => setForm((current) => ({ ...current, password: e.target.value }))} className="w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary" />
+                  <button type="button" onClick={() => setForm((current) => ({ ...current, password: generateStrongPassword() }))} className="rounded-xl border border-[rgba(139,92,246,0.2)] px-3 py-2 text-textSecondary transition-colors hover:text-textPrimary">
                     <ChevronDown className="h-4 w-4 rotate-180" />
                   </button>
                 </div>
@@ -438,7 +594,7 @@ export default function AdminMembersPage() {
 
               <div>
                 <label className="mb-1 block text-sm text-textSecondary">Select Plan</label>
-                <select required value={form.plan_id} onChange={(e) => setForm((current) => ({ ...current, plan_id: e.target.value }))} className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary">
+                <select required value={form.plan_id} onChange={(e) => setForm((current) => ({ ...current, plan_id: e.target.value }))} className="w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary">
                   {activePlanOptions.length === 0 ? <option value="">No plans available</option> : null}
                   {activePlanOptions.map((plan) => (
                     <option key={plan.id} value={plan.id}>
@@ -450,14 +606,14 @@ export default function AdminMembersPage() {
 
               <div>
                 <label className="mb-1 block text-sm text-textSecondary">Start Date</label>
-                <input required type="date" value={form.start_date} onChange={(e) => setForm((current) => ({ ...current, start_date: e.target.value }))} className="w-full rounded-lg border border-accent bg-background px-4 py-2 text-textPrimary outline-none focus:border-primary" />
+                <input required type="date" value={form.start_date} onChange={(e) => setForm((current) => ({ ...current, start_date: e.target.value }))} className="w-full rounded-xl border border-[rgba(139,92,246,0.18)] bg-[rgba(3,0,20,0.6)] px-4 py-2 text-textPrimary outline-none focus:border-primary" />
               </div>
 
               <div className="md:col-span-2 flex items-center justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-lg border border-accent px-4 py-2 text-textSecondary hover:text-textPrimary">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-[rgba(139,92,246,0.2)] px-4 py-2 text-textSecondary transition-colors hover:text-textPrimary">
                   Cancel
                 </button>
-                <button type="submit" disabled={saving} className="rounded-lg bg-primary px-4 py-2 text-textPrimary hover:bg-primaryHover disabled:opacity-60">
+                <button type="submit" disabled={saving} className="rounded-xl bg-primary px-4 py-2 text-textPrimary transition-colors hover:bg-primaryHover disabled:opacity-60">
                   {saving ? 'Saving...' : 'Create Member'}
                 </button>
               </div>

@@ -67,6 +67,34 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
 	return (
 		<div className="min-h-screen bg-background flex">
+			<style jsx global>{`
+				.owner-nav-link {
+					transition: background 0.15s ease, color 0.15s ease;
+				}
+
+				.owner-nav-link.inactive {
+					color: rgba(255, 255, 255, 0.35) !important;
+				}
+
+				.owner-nav-link.inactive:hover {
+					color: rgba(255, 255, 255, 0.7) !important;
+					background: rgba(255, 255, 255, 0.03) !important;
+				}
+
+				.owner-nav-link.active {
+					background: rgba(124, 58, 237, 0.1) !important;
+					color: #a78bfa !important;
+					box-shadow: inset 3px 0 0 rgba(124, 58, 237, 0.6);
+				}
+
+				.signout-btn {
+					transition: color 0.2s ease;
+				}
+
+				.signout-btn:hover {
+					color: rgba(239, 68, 68, 0.7) !important;
+				}
+			`}</style>
 
 			{/* SIDEBAR */}
 			<aside
@@ -77,11 +105,11 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 					height: '100vh',
 					width: 256,
 					zIndex: 50,
-					backgroundColor: 'var(--brand-surface)',
+					background: 'linear-gradient(180deg, #08080f 0%, #050508 100%)',
 					borderColor: 'var(--brand-accent)',
 					display: 'flex',
 					flexDirection: 'column',
-					borderRight: '1px solid var(--brand-accent)',
+					borderRight: '1px solid rgba(255,255,255,0.04)',
 					transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
 					transition: 'transform 0.25s ease',
 				}}
@@ -89,8 +117,8 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
 				{/* Brand + Close button (mobile only) */}
 				<div
-					className="flex items-center justify-between p-4 border-b"
-					style={{ borderColor: 'var(--brand-accent)' }}
+					className="flex items-center justify-between border-b"
+					style={{ padding: '20px 20px 16px', borderColor: 'rgba(255,255,255,0.04)', marginBottom: '8px' }}
 				>
 					<Link href="/" className="font-bold text-lg"
 						style={{ color: 'var(--brand-primary)' }}>
@@ -108,15 +136,21 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 				</div>
 
 				{/* Label */}
-				<div className="px-4 py-3">
-					<span className="text-xs uppercase tracking-widest"
-						style={{ color: 'var(--brand-text-secondary)' }}>
+				<div style={{ padding: '8px 20px 4px', marginBottom: '4px' }}>
+					<span
+						style={{
+							fontSize: '9px',
+							letterSpacing: '0.25em',
+							color: 'rgba(255,255,255,0.2)',
+							textTransform: 'uppercase',
+						}}
+					>
 						Owner Panel
 					</span>
 				</div>
 
 				{/* Nav */}
-				<nav className="flex-1 px-3 space-y-1">
+				<nav className="flex-1 space-y-1" style={{ padding: '2px 12px' }}>
 					{navItems.map((item) => {
 						const Icon = item.icon
 						const isActive = pathname === item.href
@@ -125,35 +159,36 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 								key={item.href}
 								href={item.href}
 								onClick={() => isMobile && setSidebarOpen(false)}
-								style={isActive ? {
-									backgroundColor: 'var(--brand-primary)20',
-									color: 'var(--brand-primary)',
-								} : {
-									color: 'var(--brand-text-secondary)',
-								}}
-								className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:opacity-80"
+								className={`owner-nav-link ${isActive ? 'active' : 'inactive'} flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium`}
+								style={{ padding: '10px 12px' }}
 							>
-								<Icon className="h-4 w-4 shrink-0" />
+								<Icon className="h-[15px] w-[15px] shrink-0" style={{ opacity: isActive ? 0.8 : 0.5 }} />
 								{item.label}
-								<ChevronRight className="ml-auto h-4 w-4 opacity-50" />
+								<ChevronRight className="ml-auto h-[15px] w-[15px]" style={{ opacity: isActive ? 0.8 : 0.5 }} />
 							</Link>
 						)
 					})}
 				</nav>
 
 				{/* Footer */}
-				<div className="p-4 border-t"
-					style={{ borderColor: 'var(--brand-accent)' }}>
+				<div
+					style={{ marginTop: 'auto', padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.04)' }}
+				>
 					<Link href="/" className="flex items-center gap-2 text-sm mb-3"
 						style={{ color: 'var(--brand-text-secondary)' }}>
 						← Back to Site
 					</Link>
 					<button
 						onClick={() => { logout(); router.push('/') }}
-						className="flex items-center gap-2 text-sm w-full hover:text-red-400 transition-colors"
-						style={{ color: 'var(--brand-text-secondary)' }}
+						className="signout-btn flex w-full items-center"
+						style={{
+							alignItems: 'center',
+							gap: '10px',
+							fontSize: '13px',
+							color: 'rgba(255,255,255,0.3)',
+						}}
 					>
-						<LogOut className="h-4 w-4" />
+						<LogOut className="h-[14px] w-[14px]" />
 						Sign Out
 					</button>
 				</div>

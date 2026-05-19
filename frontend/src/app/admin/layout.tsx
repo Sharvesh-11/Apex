@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Settings } from 'lucide-react';
+import { LayoutDashboard, Users } from 'lucide-react';
 
 import DashboardNavbar from '@/components/layout/DashboardNavbar';
 import useAuthStore from '@/store/authStore';
@@ -48,16 +48,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isReady || isLoading || !isAuthenticated || role !== 'admin') return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen"
+      style={{
+        background:
+          'linear-gradient(135deg, #030014 0%, #090018 30%, #14002E 65%, #1A1040 100%)',
+      }}
+    >
       <DashboardNavbar role="admin" />
 
-      <div className="flex pt-16">
-        <aside className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-surface border-r border-accent overflow-y-auto hidden md:block">
-          <div className="p-4">
-            <div className="text-xl font-bold text-primary">Admin Panel</div>
+      <div className="relative flex pt-16">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+          <div className="absolute -right-20 -top-14 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.08)_0%,transparent_70%)]" />
+          <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.06)_0%,transparent_70%)]" />
+        </div>
+
+        <aside className="fixed left-4 top-20 z-20 hidden h-[calc(100vh-6rem)] w-56 overflow-y-auto rounded-[22px] border border-[rgba(139,92,246,0.14)] bg-[rgba(9,2,26,0.62)] shadow-[0_16px_40px_rgba(3,0,20,0.45)] backdrop-blur-[24px] md:block">
+          <div className="px-4 pb-3 pt-4">
+            <div className="text-base font-light tracking-[0.18em] text-[#FFFFFF]">APEX</div>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#8E7CC3]">admin navigation</div>
           </div>
 
-          <nav className="p-4 space-y-1">
+          <nav className="space-y-1 px-3 py-2">
             {navigation.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
@@ -66,25 +78,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
+                  className={`group relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                     active
-                      ? 'bg-primary/10 text-primary border-r-2 border-primary rounded-l-lg'
-                      : 'text-textSecondary hover:text-textPrimary hover:bg-white/5 rounded-lg'
+                      ? 'bg-[rgba(139,92,246,0.2)] text-[#D8CCFF] shadow-[0_0_0_1px_rgba(139,92,246,0.22)_inset]'
+                      : 'text-[#A995DE] hover:bg-[rgba(139,92,246,0.12)] hover:text-[#FFFFFF]'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
+                  {active ? (
+                    <span className="absolute left-0 top-2 h-8 w-[2px] rounded-full bg-[linear-gradient(to_bottom,#8B5CF6,rgba(139,92,246,0.25))]" />
+                  ) : null}
+                  <Icon className="h-4 w-4" />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="px-4 pt-4 border-t border-accent mt-4">
-            <span className="text-xs text-primary uppercase tracking-widest">Admin</span>
+          <div className="mt-3 px-4 pb-4 pt-4">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-[#8E7CC3]">operator mode</span>
           </div>
         </aside>
 
-        <main className="flex-1 md:ml-64 p-6 min-h-screen">{children}</main>
+        <div className="pointer-events-none fixed left-[15rem] top-16 z-10 hidden h-[calc(100vh-4rem)] w-10 bg-[linear-gradient(to_right,rgba(139,92,246,0.12),rgba(139,92,246,0.02),transparent)] blur-2xl md:block" />
+
+        <main className="relative z-10 min-h-screen flex-1 px-4 py-6 md:ml-60 md:px-6">{children}</main>
       </div>
     </div>
   );

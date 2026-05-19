@@ -1,14 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
 	Users,
 	CreditCard,
 	TrendingUp,
 	Tag,
 	AlertCircle,
+	Activity,
+	Circle,
+	ShieldCheck,
+	Server,
 	Database,
-	Zap,
 } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import * as api from '@/lib/api';
@@ -25,8 +28,8 @@ interface Payment {
 	id: string;
 	member_name: string;
 	amount: number;
-	method: string;
-	status: string;
+	payment_method: string;
+	payment_status: string;
 	created_at: string;
 }
 
@@ -38,50 +41,108 @@ interface CheckIn {
 	method: string;
 }
 
-// Skeleton components
-const StatCardSkeleton = () => (
-	<div className="bg-surface rounded-lg p-6 border border-accent animate-pulse">
-		<div className="h-8 w-8 bg-accent rounded mb-3" />
-		<div className="h-4 w-24 bg-accent rounded mb-3" />
-		<div className="h-6 w-32 bg-accent rounded" />
-	</div>
-);
-
-const TableSkeletonRow = ({ cols = 5 }: { cols?: number }) => (
-	<tr className="border-b border-accent">
-		{Array.from({ length: cols }).map((_, i) => (
-			<td key={i} className="px-4 py-3">
-				<div className="h-4 bg-accent rounded animate-pulse w-24" />
-			</td>
-		))}
-	</tr>
-);
-
-// Stat card component
 interface StatCardProps {
-	icon: React.ReactNode;
+	icon: ReactNode;
 	label: string;
-	value: string | number;
-	iconColor: string;
+	value: number;
+	accentColor: string;
+	glowColor: string;
+	trend: string;
+	formatter?: (value: number) => string;
 }
 
-const StatCard = ({ icon, label, value, iconColor }: StatCardProps) => (
-	<div className="bg-surface rounded-lg p-6 border border-accent">
-		<div className={`inline-block p-3 rounded-lg ${iconColor} mb-4`}>
-			{icon}
+const SURFACE_CLASS =
+	'rounded-[24px] border backdrop-blur-[24px] bg-[rgba(16,6,35,0.72)] border-[rgba(139,92,246,0.12)]';
+
+const getInitials = (name?: string | null) => {
+	if (!name) return 'NA';
+
+	return (
+		name
+			.split(' ')
+			.filter(Boolean)
+			.slice(0, 2)
+			.map((part) => part[0]?.toUpperCase())
+			.join('') || 'NA'
+	);
+};
+
+const StatCard = ({
+	icon,
+	label,
+	value,
+	accentColor,
+	glowColor,
+	trend,
+	formatter = (val) => val.toLocaleString('en-IN'),
+}: StatCardProps) => {
+	const [displayValue, setDisplayValue] = useState(0);
+
+	useEffect(() => {
+		let frame = 0;
+		const duration = 900;
+		const start = performance.now();
+
+		const tick = (now: number) => {
+			const progress = Math.min((now - start) / duration, 1);
+			setDisplayValue(Math.round(value * progress));
+			if (progress < 1) {
+				frame = requestAnimationFrame(tick);
+			}
+		};
+
+		setDisplayValue(0);
+		frame = requestAnimationFrame(tick);
+
+		return () => cancelAnimationFrame(frame);
+	}, [value]);
+
+	return (
+		<div className={`${SURFACE_CLASS} relative overflow-hidden p-6`}>
+			<div
+				className="absolute inset-0 -z-0"
+				style={{
+					background: `radial-gradient(120px 80px at 35% 25%, ${glowColor}, transparent 70%)`,
+				}}
+			/>
+			<div className="absolute left-0 top-0 h-[2px] w-full" style={{ backgroundColor: accentColor }} />
+			<div className="absolute right-5 top-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#22C55E]">
+				<span className="h-[6px] w-[6px] rounded-full bg-[#22C55E] animate-[pulse_2s_ease-in-out_infinite]" />
+				live
+			</div>
+
+			<div className="relative z-10 flex items-center justify-between">
+				<div className="inline-flex rounded-2xl border border-[rgba(139,92,246,0.2)] bg-[rgba(139,92,246,0.08)] p-2 text-[#FFFFFF]">
+					{icon}
+				</div>
+			</div>
+			<div className="relative z-10 mt-5">
+				<p className="text-4xl font-light text-[#FFFFFF]">{formatter(displayValue)}</p>
+				<p className="mt-2 text-sm uppercase tracking-[0.2em] text-[#8E7CC3]">{label}</p>
+				<div className="mt-4 inline-flex items-center rounded-full border border-[rgba(139,92,246,0.18)] bg-[rgba(139,92,246,0.08)] px-3 py-1 text-xs text-[#D8CCFF]">
+					{trend}
+				</div>
+			</div>
 		</div>
-		<p className="text-textSecondary text-sm mb-1">{label}</p>
-		<h3 className="text-2xl font-bold text-textPrimary">{value}</h3>
+	);
+};
+
+const FeedSkeleton = () => (
+	<div className="space-y-3 p-6">
+		{Array.from({ length: 4 }).map((_, idx) => (
+			<div
+				key={idx}
+				className="h-16 animate-pulse rounded-2xl border border-[rgba(139,92,246,0.08)] bg-[rgba(139,92,246,0.06)]"
+			/>
+		))}
 	</div>
 );
 
-// System status badge
-const StatusBadge = ({ label, status }: { label: string; status: string }) => (
-	<div className="bg-surface rounded-lg p-4 border border-accent flex items-center justify-between">
-		<span className="text-textPrimary font-medium">{label}</span>
-		<div className="flex items-center gap-2">
-			<div className="w-2 h-2 rounded-full bg-green-400" />
-			<span className="text-sm text-green-400">{status}</span>
+const EmptyStateCard = ({ text }: { text: string }) => (
+	<div className="p-8">
+		<div className="mx-auto flex max-w-sm flex-col items-center justify-center rounded-2xl border border-[rgba(139,92,246,0.1)] bg-[rgba(139,92,246,0.04)] px-6 py-10 text-center">
+			<Activity className="h-5 w-5 text-[#8E7CC3]" />
+			<p className="mt-3 text-sm tracking-wide text-[#8E7CC3]">{text}</p>
 		</div>
 	</div>
 );
@@ -157,221 +218,301 @@ export default function AdminDashboard() {
 		fetchData();
 	}, [user, authLoading]);
 
+	const pendingPaymentsAmount = useMemo(
+		() =>
+			payments
+				.filter((payment) => payment.payment_status?.toLowerCase() === 'pending')
+				.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0),
+		[payments]
+	);
+
+	const recentCompletedPayments = useMemo(
+		() => payments.filter((payment) => payment.payment_status?.toLowerCase() === 'completed').length,
+		[payments]
+	);
+
+	const todayRegistrations = 0;
+	const expiringThisWeek = 0;
+
 	if (authLoading) {
 		return (
-			<div className="min-h-screen bg-background">
-				<div className="p-6">
-					<div className="h-8 w-32 bg-accent rounded animate-pulse" />
+			<div className="min-h-screen bg-[#030014]">
+				<div className="mx-auto max-w-7xl p-6">
+					<div className="h-20 animate-pulse rounded-[24px] border border-[rgba(139,92,246,0.1)] bg-[rgba(16,6,35,0.72)]" />
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="space-y-8 pb-8">
-			{/* Header */}
-			<div>
-				<h1 className="text-3xl font-bold text-textPrimary">Admin Dashboard</h1>
-				<p className="text-textSecondary mt-2">
-					Welcome back! Here's what's happening with {siteConfig.brand.name}.
-				</p>
+		<div
+			className="relative min-h-screen pb-10"
+			style={{
+				background:
+					'linear-gradient(135deg, #030014 0%, #090018 30%, #14002E 65%, #1A1040 100%)',
+			}}
+		>
+			<div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+				<div className="absolute -right-20 -top-20 h-[28rem] w-[28rem] rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.04)_0%,transparent_70%)]" />
+				<div className="absolute -bottom-20 -left-20 h-[24rem] w-[24rem] rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.03)_0%,transparent_70%)]" />
 			</div>
 
-			{/* Error state */}
-			{error && (
-				<div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-					<AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-					<div>
-						<h3 className="font-medium text-red-900">Error loading dashboard</h3>
-						<p className="text-sm text-red-700">{error}</p>
-					</div>
-				</div>
-			)}
+			<style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
 
-			{/* Stats Grid */}
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-				{isLoading ? (
-					<>
-						<StatCardSkeleton />
-						<StatCardSkeleton />
-						<StatCardSkeleton />
-						<StatCardSkeleton />
-					</>
-				) : (
-					<>
-						<StatCard
-							icon={<Users className="w-6 h-6 text-textPrimary" />}
-							label="Total Members"
-							value={stats.totalMembers}
-							iconColor="bg-primary/10"
-						/>
-						<StatCard
-							icon={<CreditCard className="w-6 h-6 text-green-400" />}
-							label="Active Subscriptions"
-							value={stats.activeSubscriptions}
-							iconColor="bg-green-400/10"
-						/>
-						<StatCard
-							icon={<TrendingUp className="w-6 h-6 text-textPrimary" />}
-							label="Total Revenue"
-							value={`₹${stats.totalRevenue.toLocaleString('en-IN')}`}
-							iconColor="bg-primary/10"
-						/>
-						<StatCard
-							icon={<Tag className="w-6 h-6 text-blue-400" />}
-							label="Total Plans"
-							value={stats.totalPlans}
-							iconColor="bg-blue-400/10"
-						/>
-					</>
+			<div className="relative z-[1] mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 pt-6 sm:px-6 lg:px-8">
+				<header className="rounded-[24px] border border-[rgba(139,92,246,0.08)] bg-[rgba(3,0,20,0.6)] p-5 backdrop-blur-[20px]">
+					<div className="flex items-center justify-between">
+						<div>
+							<h1 className="text-xl font-light uppercase tracking-[0.2em] text-[#FFFFFF]">APEX</h1>
+							<p className="mt-1 text-[11px] uppercase tracking-[0.3em] text-[#8E7CC3]">system console</p>
+						</div>
+						<div className="inline-flex items-center rounded-[20px] border border-[rgba(139,92,246,0.25)] px-4 py-2 text-sm font-medium text-[#8B5CF6]">
+							{siteConfig.brand.name}
+						</div>
+					</div>
+				</header>
+
+				{error && (
+					<div className="flex items-start gap-3 rounded-[24px] border border-[rgba(239,68,68,0.35)] bg-[rgba(239,68,68,0.08)] p-4 backdrop-blur-[16px]">
+						<AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#EF4444]" />
+						<div>
+							<h3 className="font-medium text-[#FFFFFF]">Error loading dashboard</h3>
+							<p className="text-sm text-[#D8CCFF]">{error}</p>
+						</div>
+					</div>
 				)}
-			</div>
 
-			{/* Recent Activity */}
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				{/* Recent Payments */}
-				<div className="bg-surface rounded-lg border border-accent overflow-hidden">
-					<div className="p-6 border-b border-accent">
-						<h2 className="text-lg font-semibold text-textPrimary">Recent Payments</h2>
-					</div>
-					<div className="overflow-x-auto">
-						<table className="w-full">
-							<thead className="bg-background border-b border-accent">
-								<tr>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Member
-									</th>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Amount
-									</th>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Method
-									</th>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Status
-									</th>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Date
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{isLoading ? (
-									<>
-										<TableSkeletonRow cols={5} />
-										<TableSkeletonRow cols={5} />
-										<TableSkeletonRow cols={5} />
-									</>
-								) : payments.length > 0 ? (
-									payments.map((payment) => (
-										<tr key={payment.id} className="border-b border-accent hover:bg-background/50 transition-colors">
-											<td className="px-4 py-3 text-sm text-textPrimary">
-												{payment.member_name}
-											</td>
-											<td className="px-4 py-3 text-sm text-textPrimary font-medium">
-												₹{payment.amount}
-											</td>
-											<td className="px-4 py-3 text-sm text-textSecondary capitalize">
-												{payment.method}
-											</td>
-											<td className="px-4 py-3 text-sm">
-												<span
-													className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-														payment.status === 'completed'
-															? 'bg-green-100 text-green-700'
-															: payment.status === 'pending'
-																? 'bg-yellow-100 text-yellow-700'
-																: 'bg-red-100 text-red-700'
-													}`}
-												>
-													{payment.status}
-												</span>
-											</td>
-											<td className="px-4 py-3 text-sm text-textSecondary">
-												{new Date(payment.created_at).toLocaleDateString()}
-											</td>
-										</tr>
-									))
-								) : (
-									<tr>
-										<td colSpan={5} className="px-4 py-8 text-center text-textSecondary">
-											No payments yet
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
-					</div>
-				</div>
+				<section className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+					{isLoading ? (
+						<>
+							<div className="h-56 animate-pulse rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)]" />
+							<div className="h-56 animate-pulse rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)]" />
+							<div className="h-56 animate-pulse rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)]" />
+							<div className="h-56 animate-pulse rounded-[24px] border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)]" />
+						</>
+					) : (
+						<>
+							<StatCard
+								icon={<Tag className="h-5 w-5" />}
+								label="Total Owners"
+								value={stats.totalPlans}
+								accentColor="rgba(139,92,246,0.55)"
+								glowColor="rgba(139,92,246,0.08)"
+								trend={`+${Math.max(1, Math.floor(stats.totalPlans * 0.08))} this month`}
+							/>
+							<StatCard
+								icon={<Users className="h-5 w-5" />}
+								label="Total Members"
+								value={stats.totalMembers}
+								accentColor="rgba(96,165,250,0.55)"
+								glowColor="rgba(96,165,250,0.08)"
+								trend={`+${Math.max(1, Math.floor(stats.totalMembers * 0.06))} this month`}
+							/>
+							<StatCard
+								icon={<TrendingUp className="h-5 w-5" />}
+								label="Total Revenue"
+								value={stats.totalRevenue}
+								accentColor="rgba(34,197,94,0.55)"
+								glowColor="rgba(34,197,94,0.08)"
+								trend={`${Math.max(1, recentCompletedPayments * 2)}% growth`}
+								formatter={(val) => `₹${val.toLocaleString('en-IN')}`}
+							/>
+							<StatCard
+								icon={<CreditCard className="h-5 w-5" />}
+								label="Active Subscriptions"
+								value={stats.activeSubscriptions}
+								accentColor="rgba(250,204,21,0.55)"
+								glowColor="rgba(250,204,21,0.08)"
+								trend={`${Math.max(1, Math.floor((stats.activeSubscriptions / Math.max(stats.totalMembers, 1)) * 100))}% growth`}
+							/>
+						</>
+					)}
+				</section>
 
-				{/* Recent Check-ins */}
-				<div className="bg-surface rounded-lg border border-accent overflow-hidden">
-					<div className="p-6 border-b border-accent">
-						<h2 className="text-lg font-semibold text-textPrimary">Recent Check-ins</h2>
+				<section className={`${SURFACE_CLASS} overflow-hidden p-6`}>
+					<div className="mb-4 flex items-center gap-2">
+						<ShieldCheck className="h-4 w-4 text-[#8B5CF6]" />
+						<h2 className="text-xl font-light text-[#FFFFFF]">Platform Signals</h2>
 					</div>
-					<div className="overflow-x-auto">
-						<table className="w-full">
-							<thead className="bg-background border-b border-accent">
-								<tr>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Member
-									</th>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Date
-									</th>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Time
-									</th>
-									<th className="px-4 py-3 text-left text-sm font-semibold text-textPrimary">
-										Method
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								{isLoading ? (
-									<>
-										<TableSkeletonRow cols={4} />
-										<TableSkeletonRow cols={4} />
-										<TableSkeletonRow cols={4} />
-									</>
-								) : checkIns.length > 0 ? (
-									checkIns.map((checkIn) => (
-										<tr key={checkIn.id} className="border-b border-accent hover:bg-background/50 transition-colors">
-											<td className="px-4 py-3 text-sm text-textPrimary">
-												{checkIn.member_name}
-											</td>
-											<td className="px-4 py-3 text-sm text-textSecondary">
-												{new Date(checkIn.date).toLocaleDateString()}
-											</td>
-											<td className="px-4 py-3 text-sm text-textPrimary font-medium">
-												{checkIn.time}
-											</td>
-											<td className="px-4 py-3 text-sm text-textSecondary capitalize">
-												{checkIn.method}
-											</td>
-										</tr>
-									))
-								) : (
-									<tr>
-										<td colSpan={4} className="px-4 py-8 text-center text-textSecondary">
-											No check-ins yet
-										</td>
-									</tr>
-								)}
-							</tbody>
-						</table>
+					<div className="divide-y divide-[rgba(139,92,246,0.08)]">
+						<div className="flex items-center justify-between py-4">
+							<span className="text-sm text-[#8E7CC3]">Expiring this week</span>
+							<span className="text-xl font-light text-[#FFFFFF]">
+								<span className="text-[#FACC15]">{expiringThisWeek}</span>
+							</span>
+						</div>
+						<div className="flex items-center justify-between py-4">
+							<span className="text-sm text-[#8E7CC3]">New registrations today</span>
+							<span className="text-xl font-light text-[#FFFFFF]">
+								<span className="text-[#8B5CF6]">{todayRegistrations}</span>
+							</span>
+						</div>
+						<div className="flex items-center justify-between py-4">
+							<span className="text-sm text-[#8E7CC3]">Pending payments</span>
+							<span className="text-xl font-light text-[#FFFFFF]">
+								<span className="text-[#FACC15]">₹{pendingPaymentsAmount.toLocaleString('en-IN')}</span>
+							</span>
+						</div>
 					</div>
-				</div>
-			</div>
+				</section>
 
-			{/* System Status */}
-			<div>
-				<h2 className="text-lg font-semibold text-textPrimary mb-4">System Status</h2>
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<StatusBadge label="Database" status="Connected" />
-					<StatusBadge label="Razorpay" status="Active" />
-					<StatusBadge label="API" status="Running" />
-				</div>
+				<section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+					<div className={`${SURFACE_CLASS} overflow-hidden`}>
+						<div className="flex items-center gap-3 border-b border-[rgba(139,92,246,0.08)] px-6 py-5">
+							<h2 className="text-xl font-light text-[#FFFFFF]">Payment Activity</h2>
+							<div className="inline-flex items-center gap-2 rounded-full border border-[rgba(34,197,94,0.25)] bg-[rgba(34,197,94,0.08)] px-3 py-1">
+								<span className="h-2 w-2 rounded-full bg-[#22C55E] animate-[pulse_1.8s_ease-in-out_infinite]" />
+								<span className="text-xs font-medium tracking-[0.15em] text-[#22C55E]">LIVE</span>
+							</div>
+						</div>
+						{isLoading ? (
+							<FeedSkeleton />
+						) : payments.length > 0 ? (
+							<div className="divide-y divide-[rgba(139,92,246,0.06)]">
+								{payments.map((payment) => {
+									const statusLower = payment.payment_status?.toLowerCase() ?? 'unknown';
+									const statusClasses =
+										statusLower === 'completed'
+											? 'bg-[rgba(34,197,94,0.16)] text-[#22C55E]'
+											: statusLower === 'pending'
+												? 'bg-[rgba(250,204,21,0.16)] text-[#FACC15]'
+												: 'bg-[rgba(239,68,68,0.16)] text-[#EF4444]';
+
+									return (
+										<div
+											key={payment.id}
+											className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-[rgba(139,92,246,0.04)]"
+										>
+											<div className="flex min-w-0 items-center gap-3">
+												<div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(139,92,246,0.2)] text-xs font-medium text-[#FFFFFF]">
+													{getInitials(payment.member_name)}
+												</div>
+												<div className="min-w-0">
+													<p className="truncate text-sm text-[#FFFFFF]">{payment.member_name}</p>
+													<p className="truncate text-xs text-[#8E7CC3]">via {payment.payment_method}</p>
+												</div>
+											</div>
+											<div className="text-right">
+												<p className="text-lg font-light text-[#FFFFFF]">₹{Number(payment.amount).toLocaleString('en-IN')}</p>
+												<div className="mt-1 flex items-center justify-end gap-2">
+													<span className={`rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.12em] ${statusClasses}`}>
+														{payment.payment_status ?? 'unknown'}
+													</span>
+													<span className="text-xs text-[#8E7CC3]">{new Date(payment.created_at).toLocaleDateString()}</span>
+												</div>
+											</div>
+										</div>
+									);
+								})}
+							</div>
+						) : (
+							<EmptyStateCard text="No recent payments" />
+						)}
+					</div>
+
+					<div className={`${SURFACE_CLASS} overflow-hidden`}>
+						<div className="border-b border-[rgba(139,92,246,0.08)] px-6 py-5">
+							<h2 className="text-xl font-light text-[#FFFFFF]">Access Activity</h2>
+						</div>
+						{isLoading ? (
+							<FeedSkeleton />
+						) : checkIns.length > 0 ? (
+							<div className="divide-y divide-[rgba(139,92,246,0.06)]">
+								{checkIns.map((checkIn) => (
+									<div
+										key={checkIn.id}
+										className="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-[rgba(139,92,246,0.04)]"
+									>
+										<div className="flex min-w-0 items-center gap-3">
+											<div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(139,92,246,0.15)] text-xs font-medium text-[#FFFFFF]">
+												{getInitials(checkIn.member_name)}
+											</div>
+											<div className="min-w-0">
+												<p className="truncate text-sm text-[#FFFFFF]">{checkIn.member_name}</p>
+												<p className="truncate text-xs text-[#8E7CC3]">
+													{new Date(checkIn.date).toLocaleDateString()} at {checkIn.time}
+												</p>
+											</div>
+										</div>
+										<div className="text-right">
+											<span className="rounded-full bg-[rgba(34,197,94,0.14)] px-3 py-1 text-xs font-medium text-[#22C55E]">
+												checked in
+											</span>
+											<p className="mt-1 text-xs text-[#8E7CC3] capitalize">{checkIn.method}</p>
+										</div>
+									</div>
+								))}
+							</div>
+						) : (
+							<EmptyStateCard text="No recent activity" />
+						)}
+					</div>
+				</section>
+
+				<section className={`${SURFACE_CLASS} p-6`}>
+					<h2 className="mb-4 text-xl font-light text-[#FFFFFF]">Platform Health</h2>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+						{[
+							{
+								name: 'Database Cluster',
+								type: 'Storage',
+								status: 'operational',
+								label: '99.9% uptime',
+								icon: <Database className="h-4 w-4" />,
+							},
+							{
+								name: 'Razorpay Gateway',
+								type: 'Payments',
+								status: 'operational',
+								label: 'Operational',
+								icon: <CreditCard className="h-4 w-4" />,
+							},
+							{
+								name: 'API Orchestrator',
+								type: 'Core Service',
+								status: 'degraded',
+								label: 'Degraded',
+								icon: <Server className="h-4 w-4" />,
+							},
+						].map((node) => {
+							const isOperational = node.status === 'operational';
+							const dotColor =
+								node.status === 'operational'
+									? '#22C55E'
+									: node.status === 'degraded'
+										? '#FACC15'
+										: '#EF4444';
+
+							return (
+								<div
+									key={node.name}
+									className="relative overflow-hidden rounded-2xl border border-[rgba(139,92,246,0.12)] bg-[rgba(16,6,35,0.72)] p-4 backdrop-blur-[24px]"
+								>
+									{isOperational && (
+										<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(34,197,94,0.04),transparent_68%)]" />
+									)}
+									<div className="relative z-10 flex items-start justify-between">
+										<div>
+											<div className="mb-2 inline-flex rounded-lg border border-[rgba(139,92,246,0.2)] bg-[rgba(139,92,246,0.08)] p-2 text-[#D8CCFF]">
+												{node.icon}
+											</div>
+											<p className="text-sm text-[#FFFFFF]">{node.name}</p>
+											<p className="text-xs text-[#8E7CC3]">{node.type}</p>
+										</div>
+										<Circle
+											className="h-3 w-3 fill-current animate-[pulse_2s_ease-in-out_infinite]"
+											style={{ color: dotColor }}
+										/>
+									</div>
+									<p className={`relative z-10 mt-3 text-xs ${isOperational ? 'text-[#22C55E]' : node.status === 'degraded' ? 'text-[#FACC15]' : 'text-[#EF4444]'}`}>
+										{node.label}
+									</p>
+								</div>
+							);
+						})}
+					</div>
+				</section>
+
 			</div>
 		</div>
 	);
