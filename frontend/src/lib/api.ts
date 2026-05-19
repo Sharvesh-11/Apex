@@ -1,8 +1,6 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL
-	? `${process.env.NEXT_PUBLIC_API_URL}/api`
-	: '/api';
+const baseURL = '/api';
 
 export const api = axios.create({
 	baseURL,
