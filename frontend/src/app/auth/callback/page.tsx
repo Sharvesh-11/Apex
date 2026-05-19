@@ -37,7 +37,7 @@ function AuthCallbackContent() {
 
 		void (async () => {
 			try {
-				const response = await post<OAuthCallbackResponse>('/oauth/google/callback', { code });
+				const response = await post<OAuthCallbackResponse>('/auth/google/callback', { code });
 
 				localStorage.setItem('apex_token', response.access_token);
 				document.cookie = `apex_token=${response.access_token}; path=/; max-age=${60 * 60 * 24}`;
