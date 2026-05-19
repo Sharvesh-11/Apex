@@ -44,7 +44,7 @@ export default function PaymentForm({ members, onSubmit, onClose }: Props) {
 
       try {
         const res = await api.get<Subscription[]>(`/subscriptions/member/${selectedMemberId}/`);
-        setSubscriptions(res ?? []);
+          setSubscriptions(res.data ?? []);
       } catch (err) {
         setSubscriptions([]);
       } finally {
