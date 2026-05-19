@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import { post } from '@/lib/api';
-import { siteConfig } from '@/lib/config';
+import { siteConfig, C } from '@/lib/config';
 
 type CheckinResponse = {
 	success: boolean;
@@ -25,19 +25,6 @@ export default function CheckinLandingPage() {
 	const [memberName, setMemberName] = useState('');
 	const [streak, setStreak] = useState<number>(0);
 	const [nextCheckinAt, setNextCheckinAt] = useState('');
-	
-	const C = {
-		bg: '#050508',
-		surface: '#0a0a12',
-		primary: '#7c3aed',
-		primaryGlow: 'rgba(124,58,237,0.4)',
-		accent: '#a78bfa',
-		green: '#10b981',
-		gold: '#f59e0b',
-		red: '#ef4444',
-		textPrimary: '#f1f5f9',
-		textSecondary: '#475569',
-	} as const;
 
 	useEffect(() => {
 		let mounted = true;
