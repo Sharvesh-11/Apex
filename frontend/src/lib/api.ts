@@ -22,7 +22,14 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.request.use((config) => {
-	if (typeof config.url === 'string' && !config.url.endsWith('/') && !config.url.includes('?')) {
+	const skipTrailingSlashRoutes = ['/auth/google/url', '/auth/google/callback'];
+
+	if (
+		typeof config.url === 'string' &&
+		!skipTrailingSlashRoutes.includes(config.url) &&
+		!config.url.endsWith('/') &&
+		!config.url.includes('?')
+	) {
 		config.url = `${config.url}/`;
 	}
 
