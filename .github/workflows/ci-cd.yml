@@ -21,9 +21,10 @@ jobs:
         run: |
           docker build \
             --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+            --build-arg NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }} \
+            --build-arg NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }} \
             -t ${{ secrets.DOCKER_USERNAME }}/apex-frontend:latest ./frontend
           docker push ${{ secrets.DOCKER_USERNAME }}/apex-frontend:latest
-
   # ── Deploy to Server ──────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Server
