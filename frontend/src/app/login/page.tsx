@@ -62,7 +62,7 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
 
     try {
-      const response = await api.get<{ url?: string; redirect_url?: string }>('/oauth/google/url');
+      const response = await api.get<{ url?: string; redirect_url?: string }>('/auth/google/url');
       const redirectUrl = response.data?.url ?? response.data?.redirect_url;
 
       if (!redirectUrl) {
