@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import api from '@/lib/api';
 import { siteConfig } from '@/lib/config';
@@ -30,7 +30,7 @@ function getErrorMessage(error: unknown) {
   return 'Registration failed. Please try again.';
 }
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planId = searchParams.get('plan_id');
@@ -106,8 +106,7 @@ export default function RegisterPage() {
     }
   };
 
-  
-   return (
+  return (
   <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
     {/* Background Image */}
     <div
@@ -503,4 +502,12 @@ export default function RegisterPage() {
     </div>
   </div>
 );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterContent />
+    </Suspense>
+  );
 }
