@@ -201,11 +201,7 @@ useEffect(() => {
 						apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}`),
 						apiClient.get<AttendanceRecord[]>(`/attendance/member/${memberId}`),
 					apiClient.get<Plan[]>('/plans/'),
-
-				if (!mounted) return;
-
-				setMember(memberResponse);
-				setSubscriptions(filterVisibleSubscriptions(subscriptionResponse));
+				]);
 				setPayments(paymentResponse ?? []);
 				setAttendance(attendanceResponse ?? []);
 				setPlans(planResponse ?? []);

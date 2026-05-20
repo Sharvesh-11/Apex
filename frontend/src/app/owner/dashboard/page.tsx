@@ -191,7 +191,7 @@ export default function OwnerDashboardPage() {
 				get<MemberWithSubscription[]>('/members/'),
 				get<Subscription[]>('/subscriptions/active'),
 				get<PaymentWithMember[]>('/payments/'),
-
+			]);
 				if (!mounted) return;
 
 				const now = new Date();
