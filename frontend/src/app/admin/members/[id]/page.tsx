@@ -194,7 +194,7 @@ export default function AdminMemberDetailPage() {
                 apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}`),
           apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}`),
           apiClient.get<AttendanceRecord[]>(`/attendance/member/${memberId}`),
-          apiClient.get<Plan[]>('/plans'),
+          apiClient.get<Plan[]>('/plans/'),
         ]);
 
                 if (!mounted) return;

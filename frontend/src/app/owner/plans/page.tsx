@@ -183,7 +183,7 @@ export default function OwnerPlansPage() {
 				await apiClient.put(`/plans/${editingPlan.id}`, payload);
 				showToast('Plan updated successfully', 'success');
 			} else {
-				await apiClient.post('/plans', payload);
+				await apiClient.post('/plans/', payload);
 				showToast('Plan added successfully', 'success');
 			}
 

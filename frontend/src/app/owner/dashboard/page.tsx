@@ -188,10 +188,9 @@ export default function OwnerDashboardPage() {
 
 			try {
 				const [members, activeSubscriptions, payments] = await Promise.all([
-					get<MemberWithSubscription[]>('/members'),
-					get<Subscription[]>('/subscriptions/active'),
-					get<PaymentWithMember[]>('/payments'),
-				]);
+				get<MemberWithSubscription[]>('/members/'),
+				get<Subscription[]>('/subscriptions/active'),
+				get<PaymentWithMember[]>('/payments/'),
 
 				if (!mounted) return;
 
