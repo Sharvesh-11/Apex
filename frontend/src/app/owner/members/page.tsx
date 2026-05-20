@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import useAuthStore from '@/store/authStore';
 import { Eye, UserX, Search, Plus, X, ChevronDown, ShieldCheck, Users as UsersIcon } from 'lucide-react';
 
 import * as apiClient from '@/lib/api';
@@ -73,13 +72,10 @@ function getInitialFilter(member: MemberRecord) {
 }
 
 export default function OwnerMembersPage() {
-	const { isAuthenticated, user, isLoading } = useAuthStore();
 	const router = useRouter();
-	const initAuth = useAuthStore((s) => s.initAuth);
 	const showToast = useUIStore((state) => state.showToast);
 	const toast = useUIStore((state) => state.toast);
 	const clearToast = useUIStore((state) => state.clearToast);
-
 	const [members, setMembers] = useState<MemberRecord[]>([]);
 	const [roleModalMember, setRoleModalMember] = useState<MemberRecord | null>(null);
 	const [roleSelection, setRoleSelection] = useState<string>('gym_member');
@@ -96,19 +92,6 @@ export default function OwnerMembersPage() {
 	// responsive flags for grid layout
 	const [isMobile, setIsMobile] = useState(false);
 	const [isTablet, setIsTablet] = useState(false);
-
-	useEffect(() => {
-		void initAuth().catch(() => {});
-	}, [initAuth]);
-
-	useEffect(() => {
-		if (isLoading) return;
-		if (!isAuthenticated || !user) {
-			router.push('/login');
-		}
-	}, [isLoading, isAuthenticated, user, router]);
-
-	if (isLoading || !isAuthenticated || !user) return null;
 
 	useEffect(() => {
 		const check = () => {
@@ -135,8 +118,8 @@ export default function OwnerMembersPage() {
 
 			try {
 				const [membersResponse, plansResponse] = await Promise.all([
-					apiClient.get<MemberRecord[]>('/members/'),
-					apiClient.get<Plan[]>('/plans/'),
+					apiClient.get<MemberRecord[]>('/members'),
+					apiClient.get<Plan[]>('/plans'),
 				]);
 
 				if (!mounted) return;
@@ -189,7 +172,7 @@ export default function OwnerMembersPage() {
 	const activePlanOptions = plans.filter((plan) => plan.is_active !== false);
 
 	const refreshMembers = async () => {
-		const nextMembers = await apiClient.get<MemberRecord[]>('/members/');
+		const nextMembers = await apiClient.get<MemberRecord[]>('/members');
 
 		const fetchedMembers = nextMembers ?? [];
 
@@ -252,7 +235,7 @@ export default function OwnerMembersPage() {
 
 		setSaving(true);
 		try {
-			const createdMember = await apiClient.post<MemberRecord>('/members/', {
+			const createdMember = await apiClient.post<MemberRecord>('/members', {
 				full_name: form.full_name,
 				email: form.email,
 				phone: form.phone || undefined,

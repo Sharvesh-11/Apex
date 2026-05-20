@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Plus, X } from 'lucide-react';
-import useAuthStore from '@/store/authStore';
 
 import * as apiClient from '@/lib/api';
 import useUIStore from '@/store/uiStore';
@@ -48,9 +46,6 @@ function fallbackNameFromEmail(email: string) {
 }
 
 export default function AdminUsersPage() {
-	const router = useRouter();
-	const { isAuthenticated, user, isLoading, isInitialized } = useAuthStore();
-	const initAuth = useAuthStore((s) => s.initAuth);
 	const showToast = useUIStore((state) => state.showToast);
 	const toast = useUIStore((state) => state.toast);
 	const clearToast = useUIStore((state) => state.clearToast);
@@ -64,29 +59,16 @@ export default function AdminUsersPage() {
 	const [form, setForm] = useState<AddOwnerFormState>(initialFormState);
 
 	useEffect(() => {
-		void initAuth().catch(() => {
-			// handled by initAuth
-		});
-	}, [initAuth]);
-
-	useEffect(() => {
 		if (!toast) return;
 		const timeout = window.setTimeout(() => clearToast(), 3000);
 		return () => window.clearTimeout(timeout);
 	}, [clearToast, toast]);
 
-	useEffect(() => {
-		if (isLoading) return;
-		if (!isAuthenticated || !user) {
-			router.push('/login');
-		}
-	}, [isLoading, isAuthenticated, user, router]);
-
 	const fetchUsers = async () => {
 		setLoading(true);
 		setError(null);
 		try {
-			const response = await apiClient.get<UserRow[]>('/auth/users/');
+			const response = await apiClient.get<UserRow[]>('/auth/users');
 			setUsers(response ?? []);
 		} catch {
 			setError('Failed to load users');
@@ -104,8 +86,6 @@ export default function AdminUsersPage() {
 			.slice()
 			.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
 	}, [users]);
-
-	if (isLoading || !isAuthenticated || !user) return null;
 
 	const handleToggleActive = async (user: UserRow) => {
 		// admin cannot deactivate owners

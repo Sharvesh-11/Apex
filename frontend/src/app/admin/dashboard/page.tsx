@@ -147,13 +147,6 @@ const EmptyStateCard = ({ text }: { text: string }) => (
 // Main component
 export default function AdminDashboard() {
 	const { user, isLoading: authLoading } = useAuthStore();
-	const initAuth = useAuthStore((s) => s.initAuth);
-
-	useEffect(() => {
-		void initAuth().catch(() => {
-			// initAuth handles failures
-		});
-	}, [initAuth]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [stats, setStats] = useState<Stats>({
@@ -172,57 +165,51 @@ export default function AdminDashboard() {
 			setIsLoading(true);
 			setError(null);
 
-			let membersFailed = false;
-			let subscriptionsFailed = false;
-			let paymentsFailed = false;
-			let plansFailed = false;
+			try {
+				const [membersRes, subscriptionsRes, paymentsRes, plansRes] = await Promise.all([
+					api.get<unknown[]>('/members/').catch((err) => {
+						console.error('Failed to fetch members:', err);
+						return [] as unknown[];
+					}),
+					api.get<unknown[]>('/subscriptions/active/').catch((err) => {
+						console.error('Failed to fetch active subscriptions:', err);
+						return [] as unknown[];
+					}),
+					api.get<Payment[]>('/payments/').catch((err) => {
+						console.error('Failed to fetch payments:', err);
+						return [] as Payment[];
+					}),
+					api.get<unknown[]>('/plans/').catch((err) => {
+						console.error('Failed to fetch plans:', err);
+						return [] as unknown[];
+					}),
+				]);
 
-			const membersRes = await api.get<unknown[]>('/members/').catch((err) => {
-				membersFailed = true;
-				console.error('[Admin Dashboard] Failed to fetch members:', err);
-				return [] as unknown[];
-			});
+				const totalRevenue = paymentsRes.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
 
-			const subscriptionsRes = await api.get<unknown[]>('/subscriptions/active/').catch((err) => {
-				subscriptionsFailed = true;
-				console.error('[Admin Dashboard] Failed to fetch active subscriptions:', err);
-				return [] as unknown[];
-			});
+				setStats({
+					totalMembers: membersRes.length,
+					activeSubscriptions: subscriptionsRes.length,
+					totalRevenue,
+					totalPlans: plansRes.length,
+				});
 
-			const paymentsRes = await api.get<Payment[]>('/payments/').catch((err) => {
-				paymentsFailed = true;
-				console.error('[Admin Dashboard] Failed to fetch payments:', err);
-				return [] as Payment[];
-			});
+				// Get recent payments (last 10)
+				setPayments(paymentsRes.slice(0, 10));
 
-			const plansRes = await api.get<unknown[]>('/plans/').catch((err) => {
-				plansFailed = true;
-				console.error('[Admin Dashboard] Failed to fetch plans:', err);
-				return [] as unknown[];
-			});
-
-			const totalRevenue = paymentsRes.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
-
-			setStats({
-				totalMembers: membersRes.length,
-				activeSubscriptions: subscriptionsRes.length,
-				totalRevenue,
-				totalPlans: plansRes.length,
-			});
-
-			// Get recent payments (last 10)
-			setPayments(paymentsRes.slice(0, 10));
-
-			// Fetch recent check-ins (last 10) as an optional section
-			const checkInsRes = await api.get<CheckIn[]>('/attendance/').catch((err) => {
-				console.error('[Admin Dashboard] Failed to fetch check-ins:', err);
-				return [] as CheckIn[];
-			});
-			setCheckIns(checkInsRes.slice(0, 10));
-
-			const criticalFailure = membersFailed && subscriptionsFailed && paymentsFailed && plansFailed;
-			setError(criticalFailure ? 'Failed to load dashboard data. Please try again.' : null);
-			setIsLoading(false);
+				// Fetch recent check-ins (last 10)
+				try {
+					const checkInsRes = await api.get<CheckIn[]>('/attendance/');
+					setCheckIns(checkInsRes.slice(0, 10));
+				} catch (err) {
+					console.error('Failed to fetch check-ins:', err);
+				}
+			} catch (err) {
+				console.error('Failed to fetch dashboard data:', err);
+				setError('Failed to load dashboard data. Please try again.');
+			} finally {
+				setIsLoading(false);
+			}
 		};
 
 		fetchData();

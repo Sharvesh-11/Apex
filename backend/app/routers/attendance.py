@@ -135,7 +135,7 @@ def get_gym_qr(current_user: User = Depends(require_role("gym_owner", "admin")))
 	}
 
 
-@router.post("/checkin")
+@router.post("/checkin/")
 def qr_checkin(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("gym_member")),
@@ -232,7 +232,7 @@ def gym_checkin(
 
 
 
-@router.get("/me", response_model=List[AttendanceResponse])
+@router.get("/me/", response_model=List[AttendanceResponse])
 def get_my_attendance(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("gym_member")),

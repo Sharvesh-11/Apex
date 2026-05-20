@@ -4,6 +4,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 
 import { siteConfig } from '@/lib/config';
+import AuthInit from '@/components/AuthInit';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -31,7 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`} style={htmlStyle}>
       <body className={`min-h-screen flex flex-col ${clash.variable}`}>
-        <div className="flex-1 flex flex-col">{children}</div>
+        <AuthInit>
+          <div className="flex-1 flex flex-col">{children}</div>
+        </AuthInit>
       </body>
     </html>
   );

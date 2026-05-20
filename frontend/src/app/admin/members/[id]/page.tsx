@@ -190,11 +190,11 @@ export default function AdminMemberDetailPage() {
           attendanceResponse,
           planResponse,
         ] = await Promise.all([
-          apiClient.get<MemberDetails>(`/members/${memberId}/`),
-                apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}/`),
-          apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}/`),
-          apiClient.get<AttendanceRecord[]>(`/attendance/member/${memberId}/`),
-          apiClient.get<Plan[]>('/plans/'),
+          apiClient.get<MemberDetails>(`/members/${memberId}`),
+                apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}`),
+          apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}`),
+          apiClient.get<AttendanceRecord[]>(`/attendance/member/${memberId}`),
+          apiClient.get<Plan[]>('/plans'),
         ]);
 
                 if (!mounted) return;
@@ -243,7 +243,7 @@ export default function AdminMemberDetailPage() {
   const refreshSubscriptions = async () => {
     if (!memberId) return [] as SubscriptionRecord[];
     try {
-      const next = await apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}/`);
+      const next = await apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}`);
       const filtered = (next ?? []).filter((s) => s.status === 'active' || s.status === 'cancelled');
       setSubscriptions(filtered);
       return filtered;
@@ -340,7 +340,7 @@ export default function AdminMemberDetailPage() {
   const handleSaveMember = async () => {
     setSaving(true);
     try {
-      const updated = await apiClient.put<MemberDetails>(`/members/${memberId}/`, {
+      const updated = await apiClient.put<MemberDetails>(`/members/${memberId}`, {
         full_name: editForm.full_name,
         phone: editForm.phone || null,
       });
@@ -367,7 +367,7 @@ export default function AdminMemberDetailPage() {
       showToast('Subscription added successfully', 'success');
       setIsSubscriptionModalOpen(false);
       const nextSubscriptions = await apiClient.get<SubscriptionRecord[]>(
-        `/subscriptions/member/${memberId}/`
+        `/subscriptions/member/${memberId}`
       );
       setSubscriptions(nextSubscriptions ?? []);
     } catch {
@@ -381,7 +381,7 @@ export default function AdminMemberDetailPage() {
     event.preventDefault();
     setModalSaving(true);
     try {
-      await apiClient.post('/payments/cash/', {
+      await apiClient.post('/payments/cash', {
         member_id: memberId,
         subscription_id: currentSubscription?.id ?? null,
         amount: Number(cashForm.amount),
@@ -389,7 +389,7 @@ export default function AdminMemberDetailPage() {
       });
       showToast('Cash payment logged successfully', 'success');
       setIsCashModalOpen(false);
-      const nextPayments = await apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}/`);
+      const nextPayments = await apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}`);
       setPayments(nextPayments ?? []);
     } catch {
       showToast('Failed to log cash payment', 'error');

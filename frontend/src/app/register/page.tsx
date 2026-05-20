@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 
 import api from '@/lib/api';
 import { siteConfig } from '@/lib/config';
@@ -30,7 +30,7 @@ function getErrorMessage(error: unknown) {
   return 'Registration failed. Please try again.';
 }
 
-function RegisterPageContent() {
+export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planId = searchParams.get('plan_id');
@@ -92,7 +92,7 @@ function RegisterPageContent() {
     setIsGoogleLoading(true);
 
     try {
-      const response = await api.get<{ url?: string; redirect_url?: string }>('/auth/google/url/');
+      const response = await api.get<{ url?: string; redirect_url?: string }>('/oauth/google/url');
       const redirectUrl = response.data?.url ?? response.data?.redirect_url;
 
       if (!redirectUrl) {
@@ -106,7 +106,8 @@ function RegisterPageContent() {
     }
   };
 
-  return (
+  
+   return (
   <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
     {/* Background Image */}
     <div
@@ -501,13 +502,5 @@ function RegisterPageContent() {
       </div>
     </div>
   </div>
-  );
-}
-
-export default function RegisterPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <RegisterPageContent />
-    </Suspense>
-  );
+);
 }

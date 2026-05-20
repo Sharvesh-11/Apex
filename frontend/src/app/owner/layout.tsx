@@ -35,20 +35,21 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 	const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 	const role = useAuthStore((s) => s.role)
 	const logout = useAuthStore((s) => s.logout)
+	const isLoading = useAuthStore((s) => s.isLoading)
 
 	const [isReady, setIsReady] = useState(false)
 	const [isMobile, setIsMobile] = useState(false)
 	const [sidebarOpen, setSidebarOpen] = useState(false)
 
 	useEffect(() => {
-		let cancelled = false
-
-		initAuth().finally(() => {
-			if (!cancelled) setIsReady(true)
-		})
-
-		return () => { cancelled = true }
-	}, [])
+		let mounted = true
+		void initAuth()
+			.catch(() => {})
+			.finally(() => {
+				if (mounted) setIsReady(true)
+			})
+		return () => { mounted = false }
+	}, [initAuth])
 
 	useEffect(() => {
 		const check = () => setIsMobile(window.innerWidth < 768)
@@ -58,28 +59,11 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 	}, [])
 
 	useEffect(() => {
-		if (!isReady) return
+		if (!isReady || isLoading) return
 		if (!isAuthenticated || role !== 'gym_owner') router.replace('/login')
-	}, [isReady, isAuthenticated, role, router])
+	}, [isReady, isLoading, isAuthenticated, role, router])
 
-	if (!isReady) return (
-		<div style={{
-			minHeight: '100vh',
-			backgroundColor: '#050508',
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center'
-		}}>
-			<div style={{
-				width: 32,
-				height: 32,
-				border: '3px solid rgba(124,58,237,0.2)',
-				borderTop: '3px solid #7c3aed',
-				borderRadius: '50%',
-				animation: 'spin 0.8s linear infinite'
-			}} />
-		</div>
-	)
+	if (!isReady || isLoading || !isAuthenticated || role !== 'gym_owner') return null
 
 	return (
 		<div className="min-h-screen bg-background flex">
@@ -109,11 +93,6 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 
 				.signout-btn:hover {
 					color: rgba(239, 68, 68, 0.7) !important;
-				}
-
-				@keyframes spin {
-					from { transform: rotate(0deg); }
-					to { transform: rotate(360deg); }
 				}
 			`}</style>
 

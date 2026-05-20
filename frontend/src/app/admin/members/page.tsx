@@ -95,8 +95,8 @@ export default function AdminMembersPage() {
 
       try {
         const [membersResponse, plansResponse] = await Promise.all([
-          apiClient.get<MemberRecord[]>('/members/'),
-          apiClient.get<Plan[]>('/plans/'),
+          apiClient.get<MemberRecord[]>('/members'),
+          apiClient.get<Plan[]>('/plans'),
         ]);
 
         if (!mounted) return;
@@ -179,7 +179,7 @@ export default function AdminMembersPage() {
   const activePlanOptions = plans.filter((plan) => plan.is_active !== false);
 
   const refreshMembers = async () => {
-    const nextMembers = await apiClient.get<MemberRecord[]>('/members/');
+    const nextMembers = await apiClient.get<MemberRecord[]>('/members');
 
     const fetchedMembers = nextMembers ?? [];
 
@@ -242,7 +242,7 @@ export default function AdminMembersPage() {
 
     setSaving(true);
     try {
-      const createdMember = await apiClient.post<MemberRecord>('/members/', {
+      const createdMember = await apiClient.post<MemberRecord>('/members', {
         full_name: form.full_name,
         email: form.email,
         phone: form.phone || undefined,

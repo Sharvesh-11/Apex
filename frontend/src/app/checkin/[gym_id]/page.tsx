@@ -43,7 +43,7 @@ export default function CheckinPage() {
 				}
 
 				// Call checkin endpoint
-				const response = await api.post<CheckinResponse>('/attendance/checkin/', {});
+				const response = await api.post<CheckinResponse>('/attendance/checkin', {});
 				const data = response.data ?? response;
 
 				if (data.already_checked_in) {

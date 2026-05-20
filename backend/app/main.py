@@ -8,9 +8,7 @@ from app.routers import oauth
 from app.routers import attendance, auth, gallery, google_oauth, members, payment, plan, subscription
 
 
-app = FastAPI()
-
-
+app = FastAPI(title="Apex Gym API", redirect_slashes=True)
 
 # Ensure the static/gallery directory exists on startup
 @app.on_event("startup")

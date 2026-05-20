@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { get } from '@/lib/api';
+import * as apiClient from '@/lib/api';
 import type { GalleryImage } from '@/types';
 import { siteConfig } from '@/lib/config';
 
@@ -16,7 +16,8 @@ export default function GallerySection() {
     void (async () => {
       setLoading(true);
       try {
-      const data = await get<GalleryImage[]>('/gallery/')
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery`);
+        const data = (await response.json()) as GalleryImage[];
         if (!mounted) return;
         setImages(data ?? []);
       } catch (err) {
