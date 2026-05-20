@@ -58,7 +58,7 @@ export default function MemberPayPage() {
       try {
         const [plansData, memberData] = await Promise.all([
           get<Plan[]>('/plans/'),
-          get<Member>('/members/me/'),
+          get<Member>('/members/me'),
         ]);
         setPlans(plansData ?? []);
         setMember(memberData);

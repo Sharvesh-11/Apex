@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import * as api from '@/lib/api';
+import { get } from '@/lib/api';
 import { siteConfig } from '@/lib/config';
 import useAuthStore from '@/store/authStore';
 import type { AttendanceLog, Member, Payment, Subscription } from '@/types';
@@ -80,7 +80,7 @@ export default function MemberDashboardPage() {
 			// fetch member
 			let currentMember: Member | null = null;
 			try {
-				currentMember = await api.get<Member>('/members/me/');
+				currentMember = await get<Member>('/members/me');
 			} catch (err) {
 				console.error('[Member Dashboard] Failed to fetch member profile:', err);
 				if (!mounted) return;
@@ -97,15 +97,15 @@ export default function MemberDashboardPage() {
 			// fetch subscriptions, payments, attendance in parallel
 			try {
 				const [subscriptionsResponse, paymentsResponse, attendanceResponse] = await Promise.all([
-					api.get<Subscription[]>(`/subscriptions/member/${memberId}/`).catch((err) => {
+					get<Subscription[]>(`/subscriptions/member/${memberId}/`).catch((err) => {
 						console.error('[Member Dashboard] Failed to fetch subscriptions:', err);
 						return [] as Subscription[];
 					}),
-					api.get<Payment[]>(`/payments/member/${memberId}/`).catch((err) => {
+					get<Payment[]>(`/payments/member/${memberId}/`).catch((err) => {
 						console.error('[Member Dashboard] Failed to fetch payments:', err);
 						return [] as Payment[];
 					}),
-					api.get<AttendanceLog[]>(`/attendance/member/${memberId}/`).catch((err) => {
+					get<AttendanceLog[]>(`/attendance/member/${memberId}/`).catch((err) => {
 						console.error('[Member Dashboard] Failed to fetch attendance:', err);
 						return [] as AttendanceLog[];
 					}),
@@ -142,7 +142,7 @@ export default function MemberDashboardPage() {
 			setStreakError(null);
 
 			try {
-				const response = await api.get<Array<{ date: string; time: string; method: string }>>('/attendance/me/');
+				const response = await get<Array<{ date: string; time: string; method: string }>>('/attendance/me/');
 				if (!mounted) return;
 				setAttendanceRecords(response ?? []);
 			} catch (err) {
