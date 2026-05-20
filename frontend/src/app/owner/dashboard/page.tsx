@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import useAuthStore from '@/store/authStore';
 import Link from 'next/link';
 import {
 	Users,
@@ -173,11 +175,31 @@ function StatCard({
 }
 
 export default function OwnerDashboardPage() {
+	const router = useRouter();
+	const { isAuthenticated, user, isLoading: authLoading } = useAuthStore();
+	const initAuth = useAuthStore((s) => s.initAuth);
+
 	const [stats, setStats] = useState<DashboardStats>(initialStats);
 	const [recentPayments, setRecentPayments] = useState<PaymentWithMember[]>([]);
 	const [expiringSubscriptions, setExpiringSubscriptions] = useState<MemberWithSubscription[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		void initAuth().catch(() => {});
+	}, [initAuth]);
+
+	useEffect(() => {
+		if (authLoading) return;
+		if (!isAuthenticated || !user) {
+			router.push('/login');
+		}
+	}, [authLoading, isAuthenticated, user, router]);
+
+	if (authLoading) return null;
+	if (!isAuthenticated || !user) {
+		return null;
+	}
 
 	useEffect(() => {
 		let mounted = true;
@@ -186,56 +208,70 @@ export default function OwnerDashboardPage() {
 			setLoading(true);
 			setError(null);
 
-			try {
-				const [members, activeSubscriptions, payments] = await Promise.all([
-					apiClient.get<MemberWithSubscription[]>('/members'),
-					apiClient.get<Subscription[]>('/subscriptions/active'),
-					apiClient.get<PaymentWithMember[]>('/payments'),
-				]);
+			let membersFailed = false;
+			let subscriptionsFailed = false;
+			let paymentsFailed = false;
 
-				if (!mounted) return;
+			const members = await apiClient.get<MemberWithSubscription[]>('/members/').catch((err) => {
+				membersFailed = true;
+				console.error('[Owner Dashboard] Failed to fetch members:', err);
+				return [] as MemberWithSubscription[];
+			});
 
-				const now = new Date();
-				const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-				const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+			const activeSubscriptions = await apiClient.get<Subscription[]>('/subscriptions/active/').catch((err) => {
+				subscriptionsFailed = true;
+				console.error('[Owner Dashboard] Failed to fetch active subscriptions:', err);
+				return [] as Subscription[];
+			});
 
-				const revenueThisMonth = payments.reduce((sum, payment) => {
-					const paidDate = payment.paid_at ?? payment.created_at;
-					const date = new Date(paidDate);
-					const isInCurrentMonth = date >= startOfMonth && date <= endOfMonth;
-					const isCompleted = payment.payment_status === 'completed';
-					return isInCurrentMonth && isCompleted ? sum + Number(payment.amount ?? 0) : sum;
-				}, 0);
+			const payments = await apiClient.get<PaymentWithMember[]>('/payments/').catch((err) => {
+				paymentsFailed = true;
+				console.error('[Owner Dashboard] Failed to fetch payments:', err);
+				return [] as PaymentWithMember[];
+			});
 
-				const expiringSoonMembers = members
-					.filter((member) => member.subscription?.end_date)
-					.map((member) => ({
-						...member,
-						_daysRemaining: getDaysRemaining(member.subscription!.end_date),
-					}))
-					.filter((member) => member._daysRemaining <= 7)
-					.sort((a, b) => a._daysRemaining - b._daysRemaining);
+			if (!mounted) return;
 
-				setStats({
-					totalMembers: members.length,
-					activeSubscriptions: activeSubscriptions.length,
-					revenueThisMonth,
-					expiringSoon: expiringSoonMembers.length,
-				});
-				setRecentPayments(
-					payments
-						.slice()
-						.sort((a, b) => new Date(b.paid_at ?? b.created_at).getTime() - new Date(a.paid_at ?? a.created_at).getTime())
-						.slice(0, 5),
-				);
-				setExpiringSubscriptions(expiringSoonMembers as MemberWithSubscription[]);
-			} catch (fetchError) {
-				if (!mounted) return;
-				setError('Failed to load dashboard data');
-			} finally {
-				if (mounted) {
-					setLoading(false);
-				}
+			const now = new Date();
+			const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+			const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+			const revenueThisMonth = payments.reduce((sum, payment) => {
+				const paidDate = payment.paid_at ?? payment.created_at;
+				const date = new Date(paidDate);
+				const isInCurrentMonth = date >= startOfMonth && date <= endOfMonth;
+				const isCompleted = payment.payment_status === 'completed';
+				return isInCurrentMonth && isCompleted ? sum + Number(payment.amount ?? 0) : sum;
+			}, 0);
+
+			const expiringSoonMembers = members
+				.filter((member) => member.subscription?.end_date)
+				.map((member) => ({
+					...member,
+					_daysRemaining: getDaysRemaining(member.subscription!.end_date),
+				}))
+				.filter((member) => member._daysRemaining <= 7)
+				.sort((a, b) => a._daysRemaining - b._daysRemaining);
+
+			setStats({
+				totalMembers: members.length,
+				activeSubscriptions: activeSubscriptions.length,
+				revenueThisMonth,
+				expiringSoon: expiringSoonMembers.length,
+			});
+			setRecentPayments(
+				payments
+					.slice()
+					.sort((a, b) => new Date(b.paid_at ?? b.created_at).getTime() - new Date(a.paid_at ?? a.created_at).getTime())
+					.slice(0, 5),
+			);
+			setExpiringSubscriptions(expiringSoonMembers as MemberWithSubscription[]);
+
+			const criticalFailure = membersFailed && subscriptionsFailed && paymentsFailed;
+			setError(criticalFailure ? 'Failed to load dashboard data' : null);
+
+			if (mounted) {
+				setLoading(false);
 			}
 		})();
 

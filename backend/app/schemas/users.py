@@ -38,3 +38,16 @@ class UserOut(BaseModel):
     created_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MeResponse(BaseModel):
+    """Schema for /me endpoint response with access token."""
+    id: UUID
+    email: str
+    role: str
+    is_active: bool
+    full_name: Optional[str] = None
+    created_at: Optional[datetime] = None
+    access_token: str
+
+    model_config = ConfigDict(from_attributes=True)

@@ -28,6 +28,7 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)) -> TokenResponse
 
 
 @router.get("/me", response_model=UserOut)
+@router.get("/me/", response_model=UserOut, include_in_schema=False)
 def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> UserOut:
     """Get the current logged-in user with full_name populated."""
     # Fetch user with member relation if exists

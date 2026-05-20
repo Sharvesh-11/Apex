@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import useAuthStore from '@/store/authStore';
 import {
 	ArrowLeft,
 	CreditCard,
@@ -153,9 +154,9 @@ function ModalShell({ children, onClose, title }: { children: React.ReactNode; o
 export default function MemberDetailPage() {
 	const params = useParams<RouteParams>();
 	const router = useRouter();
+	const { isAuthenticated, user, isLoading } = useAuthStore();
+	const initAuth = useAuthStore((s) => s.initAuth);
 	const showToast = useUIStore((state) => state.showToast);
-
-	const memberId = Array.isArray(params.id) ? params.id[0] : params.id;
 
 	const [member, setMember] = useState<MemberDetails | null>(null);
 	const [subscriptions, setSubscriptions] = useState<SubscriptionRecord[]>([]);
@@ -175,8 +176,23 @@ export default function MemberDetailPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [processingCancelId, setProcessingCancelId] = useState<string | null>(null);
 
-// responsive state
-const [isMobile, setIsMobile] = useState(false);
+	// responsive state
+	const [isMobile, setIsMobile] = useState(false);
+
+	const memberId = Array.isArray(params.id) ? params.id[0] : params.id;
+
+	useEffect(() => {
+		void initAuth().catch(() => {});
+	}, [initAuth]);
+
+	useEffect(() => {
+		if (isLoading) return;
+		if (!isAuthenticated || !user) {
+			router.push('/login');
+		}
+	}, [isLoading, isAuthenticated, user, router]);
+
+	if (isLoading || !isAuthenticated || !user) return null;
 useEffect(() => {
 	const check = () => setIsMobile(window.innerWidth < 768);
 	check();
@@ -196,11 +212,11 @@ useEffect(() => {
 					// Only completed payments shown
 					// backend filters automatically so no frontend change needed
 					const [memberResponse, subscriptionResponse, paymentResponse, attendanceResponse, planResponse] = await Promise.all([
-						apiClient.get<MemberDetails>(`/members/${memberId}`),
-						apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}`),
-						apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}`),
-						apiClient.get<AttendanceRecord[]>(`/attendance/member/${memberId}`),
-						apiClient.get<Plan[]>('/plans'),
+						apiClient.get<MemberDetails>(`/members/${memberId}/`),
+						apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}/`),
+						apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}/`),
+						apiClient.get<AttendanceRecord[]>(`/attendance/member/${memberId}/`),
+						apiClient.get<Plan[]>('/plans/'),
 					]);
 
 				if (!mounted) return;
@@ -244,7 +260,7 @@ useEffect(() => {
 			await apiClient.put(`/subscriptions/${subscriptionId}/cancel`);
 			showToast('Subscription cancelled', 'success');
 			// refresh subscriptions
-			const updated = await apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}`);
+			const updated = await apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}/`);
 			setSubscriptions(filterVisibleSubscriptions(updated));
 		} catch (err) {
 			console.error('Failed to cancel subscription:', err);
@@ -372,7 +388,7 @@ useEffect(() => {
 	const handleSaveMember = async () => {
 		setSaving(true);
 		try {
-			const updated = await apiClient.put<MemberDetails>(`/members/${memberId}`, {
+			const updated = await apiClient.put<MemberDetails>(`/members/${memberId}/`, {
 				full_name: editForm.full_name,
 				phone: editForm.phone || null,
 			});
@@ -398,7 +414,7 @@ useEffect(() => {
 			});
 			showToast('Subscription added successfully', 'success');
 			setIsSubscriptionModalOpen(false);
-			const nextSubscriptions = await apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}`);
+			const nextSubscriptions = await apiClient.get<SubscriptionRecord[]>(`/subscriptions/member/${memberId}/`);
 			setSubscriptions(filterVisibleSubscriptions(nextSubscriptions));
 		} catch {
 			showToast('Failed to add subscription', 'error');
@@ -411,7 +427,7 @@ useEffect(() => {
 		event.preventDefault();
 		setModalSaving(true);
 		try {
-			await apiClient.post('/payments/cash', {
+			await apiClient.post('/payments/cash/', {
 				member_id: memberId,
 				subscription_id: currentSubscription?.id ?? null,
 				amount: Number(cashForm.amount),
@@ -419,7 +435,7 @@ useEffect(() => {
 			});
 			showToast('Cash payment logged successfully', 'success');
 			setIsCashModalOpen(false);
-			const nextPayments = await apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}`);
+			const nextPayments = await apiClient.get<PaymentRecord[]>(`/payments/member/${memberId}/`);
 			setPayments(nextPayments ?? []);
 		} catch {
 			showToast('Failed to log cash payment', 'error');

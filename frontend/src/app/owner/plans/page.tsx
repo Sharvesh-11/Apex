@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Pencil, Plus, Power, PowerOff, TrendingUp, Users, DollarSign, Zap, Crown } from 'lucide-react';
 
 import * as apiClient from '@/lib/api';
 import type { Plan, Subscription } from '@/types';
 import useUIStore from '@/store/uiStore';
+import useAuthStore from '@/store/authStore';
 
 type PlanFormState = {
 	name: string;
@@ -63,7 +65,11 @@ function getPlanTierConfig(billingCycle: string) {
 }
 
 export default function OwnerPlansPage() {
+	const router = useRouter();
+	const { isAuthenticated, user, isLoading: authLoading } = useAuthStore();
+	const initAuth = useAuthStore((s) => s.initAuth);
 	const showToast = useUIStore((state) => state.showToast);
+
 	const [plans, setPlans] = useState<Plan[]>([]);
 	const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -74,6 +80,19 @@ export default function OwnerPlansPage() {
 	const [form, setForm] = useState<PlanFormState>(initialFormState);
 
 	useEffect(() => {
+		void initAuth().catch(() => {});
+	}, [initAuth]);
+
+	useEffect(() => {
+		if (authLoading) return;
+		if (!isAuthenticated || !user) {
+			router.push('/login');
+		}
+	}, [authLoading, isAuthenticated, user, router]);
+
+	if (authLoading || !isAuthenticated || !user) return null;
+
+	useEffect(() => {
 		void refreshPlans();
 	}, []);
 
@@ -82,8 +101,8 @@ export default function OwnerPlansPage() {
 		setError(null);
 		try {
 			const [plansData, subsData] = await Promise.all([
-				apiClient.get<Plan[]>('/plans/all'),
-				apiClient.get<Subscription[]>('/subscriptions/active'),
+				apiClient.get<Plan[]>('/plans/all/'),
+				apiClient.get<Subscription[]>('/subscriptions/active/'),
 			]);
 			setPlans(plansData ?? []);
 			setSubscriptions(subsData ?? []);
@@ -183,7 +202,7 @@ export default function OwnerPlansPage() {
 				await apiClient.put(`/plans/${editingPlan.id}`, payload);
 				showToast('Plan updated successfully', 'success');
 			} else {
-				await apiClient.post('/plans', payload);
+				await apiClient.post('/plans/', payload);
 				showToast('Plan added successfully', 'success');
 			}
 

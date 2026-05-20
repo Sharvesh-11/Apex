@@ -59,7 +59,7 @@ export default function CheckinLandingPage() {
 			if (mounted) setStatus('checking_in');
 
 			try {
-				const res = await post<CheckinResponse>('/attendance/checkin/gym', {});
+				const res = await post<CheckinResponse>('/attendance/checkin/gym/', {});
 				// post helper returns data
 				if (!mounted) return;
 				if ((res as any).already_checked_in) {

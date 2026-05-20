@@ -84,7 +84,7 @@ export default function MemberPayPage() {
     setIsProcessing(true);
     setError(null);
     try {
-      const res = await post<any>('/payments/razorpay/initiate', {
+      const res = await post<any>('/payments/razorpay/initiate/', {
         plan_id: selectedPlan.id,
       });
 
@@ -102,7 +102,7 @@ export default function MemberPayPage() {
         order_id: res.razorpay_order_id,
         handler: async (response: any) => {
           try {
-            await post('/payments/razorpay/verify', {
+            await post('/payments/razorpay/verify/', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,

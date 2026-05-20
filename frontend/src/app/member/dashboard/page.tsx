@@ -34,8 +34,19 @@ export default function MemberDashboardPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	const user = useAuthStore((state) => state.user);
+	const { user, isLoading, isAuthenticated } = useAuthStore();
+	const initAuth = useAuthStore((s) => s.initAuth);
 	const userId = user?.id;
+
+	useEffect(() => {
+		void initAuth().catch(() => {});
+	}, [initAuth]);
+
+	if (isLoading) return null;
+	if (!isAuthenticated || !user) {
+		router.replace('/login');
+		return null;
+	}
 
 	const [member, setMember] = useState<Member | null>(null);
 	const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -97,7 +108,7 @@ export default function MemberDashboardPage() {
 			// fetch subscriptions, payments, attendance in parallel
 			try {
 				const [subscriptionsResponse, paymentsResponse, attendanceResponse] = await Promise.all([
-					api.get<Subscription[]>(`/subscriptions/member/${memberId}/`).catch((err) => {
+				api.get<Subscription[]>(`/subscriptions/member/${memberId}/`).catch((err) => {
 						console.error('[Member Dashboard] Failed to fetch subscriptions:', err);
 						return [] as Subscription[];
 					}),
@@ -142,7 +153,7 @@ export default function MemberDashboardPage() {
 			setStreakError(null);
 
 			try {
-				const response = await api.get<Array<{ date: string; time: string; method: string }>>('/attendance/me');
+				const response = await api.get<Array<{ date: string; time: string; method: string }>>('/attendance/me/');
 				if (!mounted) return;
 				setAttendanceRecords(response ?? []);
 			} catch (err) {

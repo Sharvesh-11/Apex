@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Search, X, Trash2, TrendingUp, Clock, CheckCircle2 } from 'lucide-react';
 import PaymentForm, { CashPaymentData } from '@/components/owner/PaymentForm';
+import useAuthStore from '@/store/authStore';
 
 import * as apiClient from '@/lib/api';
 import type { Member, Payment, Subscription } from '@/types';
@@ -193,7 +195,11 @@ function groupPaymentsByMonth(payments: PaymentRecord[]) {
 }
 
 export default function OwnerPaymentsPage() {
+	const router = useRouter();
+	const { isAuthenticated, user, isLoading: authLoading } = useAuthStore();
+	const initAuth = useAuthStore((s) => s.initAuth);
 	const showToast = useUIStore((state) => state.showToast);
+
 	const [payments, setPayments] = useState<PaymentRecord[]>([]);
 	const [members, setMembers] = useState<Member[]>([]);
 	const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -216,6 +222,19 @@ export default function OwnerPaymentsPage() {
 	});
 
 	useEffect(() => {
+		void initAuth().catch(() => {});
+	}, [initAuth]);
+
+	useEffect(() => {
+		if (authLoading) return;
+		if (!isAuthenticated || !user) {
+			router.push('/login');
+		}
+	}, [authLoading, isAuthenticated, user, router]);
+
+	if (authLoading || !isAuthenticated || !user) return null;
+
+	useEffect(() => {
 		const checkMobile = () => setIsMobile(window.innerWidth < 768);
 		checkMobile();
 		window.addEventListener('resize', checkMobile);
@@ -230,9 +249,9 @@ export default function OwnerPaymentsPage() {
 			setError(null);
 			try {
 				const [paymentsResponse, membersResponse, subscriptionsResponse] = await Promise.all([
-					apiClient.get<PaymentRecord[]>('/payments'),
-					apiClient.get<Member[]>('/members'),
-					apiClient.get<Subscription[]>('/subscriptions/active'),
+					apiClient.get<PaymentRecord[]>('/payments/'),
+					apiClient.get<Member[]>('/members/'),
+					apiClient.get<Subscription[]>('/subscriptions/active/'),
 				]);
 
 				if (!mounted) return;
@@ -310,7 +329,7 @@ export default function OwnerPaymentsPage() {
 	}, [form.member_id, selectedMemberSubscriptions]);
 
 	const refreshPayments = async () => {
-		const nextPayments = await apiClient.get<PaymentRecord[]>('/payments');
+		const nextPayments = await apiClient.get<PaymentRecord[]>('/payments/');
 		setPayments(nextPayments ?? []);
 	};
 

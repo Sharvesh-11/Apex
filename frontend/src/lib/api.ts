@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 
-const baseURL = '/api';
+// Direct backend API endpoint - bypass Next.js proxy to avoid redirects
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export const api = axios.create({
 	baseURL,
@@ -11,7 +12,22 @@ api.interceptors.request.use((config) => {
 		return config;
 	}
 
-	const token = window.localStorage.getItem('apex_token');
+	// Try localStorage first
+	let token = window.localStorage.getItem('apex_token');
+
+	// Fallback to cookie if localStorage is empty
+	if (!token) {
+		const match = document.cookie
+			.split('; ')
+			.find((row) => row.startsWith('apex_token='));
+
+		if (match) {
+			token = match.split('=')[1];
+
+			// Sync back to localStorage so future requests work
+			window.localStorage.setItem('apex_token', token);
+		}
+	}
 
 	if (token) {
 		config.headers = config.headers ?? {};
@@ -21,20 +37,7 @@ api.interceptors.request.use((config) => {
 	return config;
 });
 
-api.interceptors.request.use((config) => {
-	const skipTrailingSlashRoutes = ['/auth/google/url', '/auth/google/callback'];
 
-	if (
-		typeof config.url === 'string' &&
-		!skipTrailingSlashRoutes.includes(config.url) &&
-		!config.url.endsWith('/') &&
-		!config.url.includes('?')
-	) {
-		config.url = `${config.url}/`;
-	}
-
-	return config;
-});
 
 api.interceptors.response.use(
 	(response) => response,

@@ -16,7 +16,7 @@ export default function GallerySection() {
     void (async () => {
       setLoading(true);
       try {
-      const data = await get<GalleryImage[]>('/gallery');
+      const data = await get<GalleryImage[]>('/gallery/')
         if (!mounted) return;
         setImages(data ?? []);
       } catch (err) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { post } from '@/lib/api';
@@ -17,7 +17,7 @@ const ROLE_REDIRECTS: Record<OAuthCallbackResponse['role'], string> = {
 	admin: '/admin/dashboard',
 };
 
-function AuthCallbackContent() {
+export default function OAuthCallbackPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
@@ -39,8 +39,16 @@ function AuthCallbackContent() {
 			try {
 				const response = await post<OAuthCallbackResponse>('/auth/google/callback', { code });
 
+				console.log('OAuth response:', response);
+
+				if (!response.access_token) {
+					throw new Error('OAuth response did not include access_token');
+				}
+
 				localStorage.setItem('apex_token', response.access_token);
 				document.cookie = `apex_token=${response.access_token}; path=/; max-age=${60 * 60 * 24}`;
+
+				console.log('Saved token:', localStorage.getItem('apex_token'));
 
 				useAuthStore.setState({
 					token: response.access_token,
@@ -52,7 +60,8 @@ function AuthCallbackContent() {
 					if (cancelled) return;
 					router.replace(ROLE_REDIRECTS[response.role]);
 				}, 100);
-			} catch {
+			} catch (err) {
+				console.error('OAuth callback failed:', err);
 				if (cancelled) return;
 				setStatus('error');
 				setErrorMessage('Authentication failed');
@@ -149,13 +158,5 @@ function AuthCallbackContent() {
 				}
 			`}</style>
 		</div>
-	);
-}
-
-export default function AuthCallbackPage() {
-	return (
-		<Suspense fallback={<div>Loading...</div>}>
-			<AuthCallbackContent />
-		</Suspense>
 	);
 }
