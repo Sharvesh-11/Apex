@@ -51,36 +51,7 @@ export function middleware(request: NextRequest) {
 	
 	console.log('[Middleware] Path:', pathname, '| Token:', token ? 'present' : 'missing');
 
-	// Handle /login route
 	if (pathname === '/login') {
-		if (!token) {
-			console.log('[Middleware] /login: no token, allowing access');
-			return NextResponse.next();
-		}
-
-		// Try to decode JWT
-		const payload = decodeJwtPayload(token);
-		
-		if (!payload) {
-			console.log('[Middleware] /login: token decode failed, allowing access (will redirect in client)');
-			return NextResponse.next();
-		}
-
-		const role = getRoleFromPayload(payload);
-
-		if (!role) {
-			console.log('[Middleware] /login: no role in payload, allowing access');
-			return NextResponse.next();
-		}
-
-		// Valid token + valid role → redirect to dashboard
-		const dashboardRoute = protectedRoutes.find((route) => route.role === role);
-		
-		if (dashboardRoute) {
-			console.log('[Middleware] /login: authenticated user with role', role, 'redirecting to', dashboardRoute.dashboard);
-			return NextResponse.redirect(new URL(dashboardRoute.dashboard, request.url));
-		}
-
 		return NextResponse.next();
 	}
 
@@ -132,7 +103,5 @@ export const config = {
     '/member/:path*',
     '/owner/:path*',
     '/admin/:path*',
-    '/login',
-    '/register',
   ]
 }

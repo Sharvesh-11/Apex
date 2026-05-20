@@ -27,8 +27,7 @@ export default function LoginPage() {
     await login(email, password);
     
     // Wait for store to fully update
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
+    await new Promise(resolve => setTimeout(resolve, 1000));
     const currentRole = useAuthStore.getState().role;
     console.log('Login successful, role:', currentRole);
 

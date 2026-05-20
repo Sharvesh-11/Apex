@@ -42,14 +42,23 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 	const [sidebarOpen, setSidebarOpen] = useState(false)
 
 	useEffect(() => {
-		let mounted = true
-		void initAuth()
-			.catch(() => {})
-			.finally(() => {
-				if (mounted) setIsReady(true)
-			})
-		return () => { mounted = false }
-	}, [initAuth])
+  let mounted = true
+
+  void initAuth()
+    .then(() => {
+      console.log("OWNER INIT AUTH DONE", useAuthStore.getState())
+    })
+    .catch((error) => {
+      console.error("OWNER INIT AUTH FAILED", error)
+    })
+    .finally(() => {
+      if (mounted) setIsReady(true)
+    })
+
+  return () => {
+    mounted = false
+  }
+}, [initAuth])
 
 	useEffect(() => {
 		const check = () => setIsMobile(window.innerWidth < 768)
@@ -58,11 +67,7 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 		return () => window.removeEventListener('resize', check)
 	}, [])
 
-	useEffect(() => {
-		if (!isReady || isLoading) return
-		if (!isAuthenticated || role !== 'gym_owner') router.replace('/login')
-	}, [isReady, isLoading, isAuthenticated, role, router])
-
+// Removed auth redirect effect to avoid forcing redirects during hydration debugging
 	if (!isReady || isLoading) {
 		return (
 			<div className="flex min-h-screen items-center justify-center bg-[#050508] text-[#D8CCFF]">
@@ -73,15 +78,25 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 		)
 	}
 
-	if (!isAuthenticated || role !== 'gym_owner') {
+	if (isReady && !isLoading && isAuthenticated && role && role !== 'gym_owner') {
 		return (
-			<div className="flex min-h-screen items-center justify-center bg-[#050508] text-[#D8CCFF]">
-				<div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(9,2,26,0.72)] px-6 py-4 text-sm">
-					Redirecting to login...
+			<div className="flex min-h-screen items-center justify-center bg-[#050508] px-6 text-[#D8CCFF]">
+				<div className="max-w-md rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(9,2,26,0.72)] px-6 py-5 text-center text-sm leading-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+					<div className="mb-2 text-base font-semibold text-[#FFFFFF]">Owner access required</div>
+					<div className="text-[#8E7CC3]">
+						This session is not signed in as a gym owner. Please sign out and log in with an owner account to view this area.
+					</div>
 				</div>
 			</div>
 		)
 	}
+
+	console.log("OWNER LAYOUT AUTH:", {
+		isReady,
+		isLoading,
+		isAuthenticated,
+		role,
+	})
 
 	return (
 		<div className="min-h-screen bg-background flex">

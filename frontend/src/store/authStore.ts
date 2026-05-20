@@ -20,17 +20,34 @@ type AuthState = {
 type AuthPersistedState = Pick<AuthState, 'token' | 'role'>;
 
 const authStorageKey = 'apex_token';
+const authPersistKey = 'apex-auth';
+
+const getCookieToken = () => {
+	if (typeof document === 'undefined') return null;
+
+	const match = document.cookie
+		.split('; ')
+		.find((row) => row.startsWith('apex_token='));
+
+	return match ? decodeURIComponent(match.split('=')[1]) : null;
+};
+
+const clearPersistedAuth = () => {
+	if (typeof window === 'undefined') {
+		return;
+	}
+
+	window.localStorage.removeItem(authStorageKey);
+	window.localStorage.removeItem(authPersistKey);
+	document.cookie = `${authStorageKey}=; path=/; max-age=0`;
+};
 
 const clearAuthStorage = () => {
 	if (typeof window === 'undefined') {
 		return;
 	}
 
-	// Clear from localStorage
-	window.localStorage.removeItem(authStorageKey);
-
-	// Clear from cookies
-	document.cookie = `${authStorageKey}=; path=/; max-age=0`;
+	clearPersistedAuth();
 };
 
 const setAuthStorage = (token: string | null) => {
@@ -39,17 +56,12 @@ const setAuthStorage = (token: string | null) => {
 	}
 
 	if (token) {
-		// Save to localStorage
-		window.localStorage.setItem(authStorageKey, token);
-
-		// Save to cookie (24 hour expiry)
-		document.cookie = `${authStorageKey}=${token}; path=/; max-age=${60 * 60 * 24}`;
+		window.localStorage.setItem("apex_token", token);
+		document.cookie = `apex_token=${encodeURIComponent(token)}; path=/; max-age=86400; SameSite=Lax`;
 		return;
 	}
 
-	// Clear both when token is null
-	window.localStorage.removeItem(authStorageKey);
-	document.cookie = `${authStorageKey}=; path=/; max-age=0`;
+	clearPersistedAuth();
 };
 
 const initialState = {
@@ -77,6 +89,7 @@ const useAuthStore = create<AuthState>()(
 					const role = response.role as AuthRole;
 
 					setAuthStorage(token);
+					console.log("LOGIN TOKEN SAVED:", token);
 
 					const meResponse = await apiClient.get<User>('/auth/me');
 
@@ -103,9 +116,38 @@ const useAuthStore = create<AuthState>()(
 				});
 			},
 			initAuth: async () => {
-				const storedToken = typeof window === 'undefined'
-					? null
-					: window.localStorage.getItem(authStorageKey);
+				let storedToken: string | null = null;
+
+				if (typeof window !== 'undefined') {
+					storedToken = window.localStorage.getItem(authStorageKey);
+
+					if (!storedToken) {
+						storedToken = getCookieToken();
+
+						if (storedToken) {
+							window.localStorage.setItem(authStorageKey, storedToken);
+						}
+					}
+
+					if (!storedToken) {
+						const persistedAuth = window.localStorage.getItem(authPersistKey);
+
+						if (persistedAuth) {
+							try {
+								const parsed = JSON.parse(persistedAuth) as { state?: Partial<AuthPersistedState> } | null;
+								storedToken = parsed?.state?.token ?? null;
+
+								if (storedToken) {
+									setAuthStorage(storedToken);
+								}
+							} catch {
+								storedToken = null;
+							}
+						}
+					}
+				}
+
+				console.log("INIT AUTH TOKEN:", storedToken);
 
 				if (!storedToken) {
 					set({
@@ -127,8 +169,11 @@ const useAuthStore = create<AuthState>()(
 						isLoading: false,
 					});
 				} catch (error) {
-					get().logout();
-					set({ isLoading: false });
+					clearPersistedAuth();
+					set({
+						...initialState,
+						isLoading: false,
+					});
 					throw error;
 				}
 			},

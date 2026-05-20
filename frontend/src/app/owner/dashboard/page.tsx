@@ -9,7 +9,7 @@ import {
 	AlertCircle,
 } from 'lucide-react';
 
-import * as apiClient from '@/lib/api';
+import { get } from '@/lib/api';
 import type { Member, Payment, Subscription } from '@/types';
 
 type MemberWithSubscription = Member & {
@@ -188,9 +188,9 @@ export default function OwnerDashboardPage() {
 
 			try {
 				const [members, activeSubscriptions, payments] = await Promise.all([
-					apiClient.get<MemberWithSubscription[]>('/members'),
-					apiClient.get<Subscription[]>('/subscriptions/active'),
-					apiClient.get<PaymentWithMember[]>('/payments'),
+					get<MemberWithSubscription[]>('/members'),
+					get<Subscription[]>('/subscriptions/active'),
+					get<PaymentWithMember[]>('/payments'),
 				]);
 
 				if (!mounted) return;
@@ -230,6 +230,7 @@ export default function OwnerDashboardPage() {
 				);
 				setExpiringSubscriptions(expiringSoonMembers as MemberWithSubscription[]);
 			} catch (fetchError) {
+				console.error("OWNER DASHBOARD FETCH FAILED", fetchError);
 				if (!mounted) return;
 				setError('Failed to load dashboard data');
 			} finally {
