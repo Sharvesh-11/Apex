@@ -142,7 +142,7 @@ export default function MemberDashboardPage() {
 			setStreakError(null);
 
 			try {
-				const response = await api.get<Array<{ date: string; time: string; method: string }>>('/attendance/me');
+				const response = await api.get<Array<{ date: string; time: string; method: string }>>('/attendance/me/');
 				if (!mounted) return;
 				setAttendanceRecords(response ?? []);
 			} catch (err) {

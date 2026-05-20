@@ -103,7 +103,7 @@ def delete_subscription(
     # Delete linked payments first to avoid foreign key violation
     from app.models.payment import Payment
     db.query(Payment).filter(
-        Payment.subscription_id == subscription_id1
+        Payment.subscription_id == subscription_id
     ).delete(synchronize_session=False)
     
     db.delete(subscription)

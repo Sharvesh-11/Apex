@@ -63,7 +63,25 @@ export default function OwnerLayout({ children }: { children: React.ReactNode })
 		if (!isAuthenticated || role !== 'gym_owner') router.replace('/login')
 	}, [isReady, isLoading, isAuthenticated, role, router])
 
-	if (!isReady || isLoading || !isAuthenticated || role !== 'gym_owner') return null
+	if (!isReady || isLoading) {
+		return (
+			<div className="flex min-h-screen items-center justify-center bg-[#050508] text-[#D8CCFF]">
+				<div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(9,2,26,0.72)] px-6 py-4 text-sm">
+					Loading owner dashboard...
+				</div>
+			</div>
+		)
+	}
+
+	if (!isAuthenticated || role !== 'gym_owner') {
+		return (
+			<div className="flex min-h-screen items-center justify-center bg-[#050508] text-[#D8CCFF]">
+				<div className="rounded-2xl border border-[rgba(139,92,246,0.14)] bg-[rgba(9,2,26,0.72)] px-6 py-4 text-sm">
+					Redirecting to login...
+				</div>
+			</div>
+		)
+	}
 
 	return (
 		<div className="min-h-screen bg-background flex">
