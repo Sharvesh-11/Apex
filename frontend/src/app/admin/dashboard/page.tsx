@@ -171,7 +171,7 @@ export default function AdminDashboard() {
 						console.error('Failed to fetch members:', err);
 						return [] as unknown[];
 					}),
-					api.get<unknown[]>('/subscriptions/active/').catch((err) => {
+				api.get<unknown[]>('/subscriptions/active').catch((err) => {
 						console.error('Failed to fetch active subscriptions:', err);
 						return [] as unknown[];
 					}),

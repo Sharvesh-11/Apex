@@ -54,7 +54,7 @@ export default function PricingSection() {
 			setHasError(false);
 
 			try {
-				const response = await api.get<Plan[]>('/plans');
+				const response = await api.get<Plan[]>('/plans/');
 				if (!mounted) return;
 				setPlans(response.data ?? []);
 				setIsLoading(false);

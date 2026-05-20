@@ -242,7 +242,7 @@ export default function AdminMembersPage() {
 
     setSaving(true);
     try {
-      const createdMember = await apiClient.post<MemberRecord>('/members', {
+      const createdMember = await apiClient.post<MemberRecord>('/members/', {
         full_name: form.full_name,
         email: form.email,
         phone: form.phone || undefined,

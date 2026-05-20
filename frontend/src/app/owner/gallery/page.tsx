@@ -41,7 +41,7 @@ export default function OwnerGalleryPage() {
 			setLoading(true);
 			setError(null);
 			try {
-				const data = await apiClient.get<GalleryRecord[]>('/gallery');
+				const data = await apiClient.get<GalleryRecord[]>('/gallery/');
 				if (!mounted) return;
 				setImages(data ?? []);
 			} catch {
@@ -70,7 +70,7 @@ export default function OwnerGalleryPage() {
 	}, [file]);
 
 	const refreshImages = async () => {
-		const nextImages = await apiClient.get<GalleryRecord[]>('/gallery');
+		const nextImages = await apiClient.get<GalleryRecord[]>('/gallery/');
 		setImages(nextImages ?? []);
 	};
 
@@ -108,7 +108,7 @@ export default function OwnerGalleryPage() {
 			formData.append('caption', form.caption);
 			formData.append('display_order', form.display_order || '0');
 
-			await apiClient.api.post('/gallery', formData, {
+					await apiClient.api.post('/gallery/', formData, {
 				headers: { 'Content-Type': 'multipart/form-data' },
 				onUploadProgress: (progressEvent) => {
 					if (!progressEvent.total) return;

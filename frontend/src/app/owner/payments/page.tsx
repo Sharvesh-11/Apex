@@ -230,8 +230,8 @@ export default function OwnerPaymentsPage() {
 			setError(null);
 			try {
 				const [paymentsResponse, membersResponse, subscriptionsResponse] = await Promise.all([
-					apiClient.get<PaymentRecord[]>('/payments'),
-					apiClient.get<Member[]>('/members'),
+					apiClient.get<PaymentRecord[]>('/payments/'),
+					apiClient.get<Member[]>('/members/'),
 					apiClient.get<Subscription[]>('/subscriptions/active'),
 				]);
 
@@ -310,7 +310,7 @@ export default function OwnerPaymentsPage() {
 	}, [form.member_id, selectedMemberSubscriptions]);
 
 	const refreshPayments = async () => {
-		const nextPayments = await apiClient.get<PaymentRecord[]>('/payments');
+		const nextPayments = await apiClient.get<PaymentRecord[]>('/payments/');
 		setPayments(nextPayments ?? []);
 	};
 
