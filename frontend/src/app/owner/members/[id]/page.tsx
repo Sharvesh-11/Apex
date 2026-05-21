@@ -202,6 +202,10 @@ useEffect(() => {
 						apiClient.get<AttendanceRecord[]>(`/attendance/member/${memberId}`),
 					apiClient.get<Plan[]>('/plans/'),
 				]);
+				if (!mounted) return;
+				setMember(memberResponse);
+				console.log("MEMBER DETAIL SET MEMBER:", memberResponse);
+				setSubscriptions(filterVisibleSubscriptions(subscriptionResponse));
 				setPayments(paymentResponse ?? []);
 				setAttendance(attendanceResponse ?? []);
 				setPlans(planResponse ?? []);
@@ -359,7 +363,10 @@ useEffect(() => {
 			</div>
 		);
 	}
+    
+	console.log("MEMBER DETAIL RENDER STATE:", { loading, error, member });
 
+	
 	if (error || !member) {
 		return <div className="rounded-xl border border-accent bg-surface p-6 text-textSecondary">{error ?? 'Member not found'}</div>;
 	}
