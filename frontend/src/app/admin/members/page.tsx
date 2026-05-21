@@ -251,7 +251,7 @@ export default function AdminMembersPage() {
 
       const selectedPlan = plans.find((plan) => plan.id === form.plan_id);
 
-      await apiClient.post('/subscriptions', {
+      await apiClient.post('/subscriptions/', {
         member_id: createdMember.id,
         plan_id: form.plan_id,
         start_date: form.start_date,

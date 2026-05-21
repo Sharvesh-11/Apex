@@ -99,7 +99,7 @@ export default function PricingSection() {
 
 		setProcessingPlanId(plan.id);
 		try {
-			const initRes = await api.post('/payments/razorpay/initiate/', { plan_id: plan.id });
+			const initRes = await api.post('/payments/razorpay/initiate', { plan_id: plan.id });
 			const data = initRes.data ?? initRes;
 
 			if (data.already_active) {

@@ -392,7 +392,7 @@ useEffect(() => {
 		event.preventDefault();
 		setModalSaving(true);
 		try {
-			await apiClient.post('/subscriptions', {
+			await apiClient.post('/subscriptions/', {
 				member_id: memberId,
 				plan_id: subscriptionForm.plan_id,
 				start_date: subscriptionForm.start_date,
