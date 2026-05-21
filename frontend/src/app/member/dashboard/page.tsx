@@ -97,15 +97,15 @@ export default function MemberDashboardPage() {
 			// fetch subscriptions, payments, attendance in parallel
 			try {
 				const [subscriptionsResponse, paymentsResponse, attendanceResponse] = await Promise.all([
-					get<Subscription[]>(`/subscriptions/member/${memberId}/`).catch((err) => {
+					get<Subscription[]>(`/subscriptions/member/${memberId}`).catch((err) => {
 						console.error('[Member Dashboard] Failed to fetch subscriptions:', err);
 						return [] as Subscription[];
 					}),
-					get<Payment[]>(`/payments/member/${memberId}/`).catch((err) => {
+					get<Payment[]>(`/payments/member/${memberId}`).catch((err) => {
 						console.error('[Member Dashboard] Failed to fetch payments:', err);
 						return [] as Payment[];
 					}),
-					get<AttendanceLog[]>(`/attendance/member/${memberId}/`).catch((err) => {
+					get<AttendanceLog[]>(`/attendance/member/${memberId}`).catch((err) => {
 						console.error('[Member Dashboard] Failed to fetch attendance:', err);
 						return [] as AttendanceLog[];
 					}),
