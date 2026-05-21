@@ -27,10 +27,17 @@ def _member_to_out(member: Member) -> MemberOut:
 		phone=member.phone,
 		profile_photo_url=member.profile_photo_url,
 		pin=member.pin,
+
+		current_streak=member.current_streak,
+		longest_streak=member.longest_streak,
+		last_checkin_date=member.last_checkin_date,
+
 		joined_at=member.joined_at,
 		is_active=member.is_active,
 		email=member.user.email,
-		role=getattr(member.user.role, "value", member.user.role) if getattr(member, "user", None) else None,
+		role=getattr(member.user.role, "value", member.user.role)
+		if getattr(member, "user", None)
+		else None,
 	)
 
 
