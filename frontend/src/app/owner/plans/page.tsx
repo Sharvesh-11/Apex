@@ -173,7 +173,7 @@ export default function OwnerPlansPage() {
 		setSaving(true);
 		try {
 			const payload = {
-				u: form.name,
+				name: form.name,
 				description: form.description || undefined,
 				price: Number(form.price),
 				billing_cycle: form.billing_cycle,
