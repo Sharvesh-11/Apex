@@ -220,8 +220,8 @@ def initiate_razorpay_for_plan(
 	cycle_value = getattr(plan.billing_cycle, "value", plan.billing_cycle)
 	if cycle_value == "monthly":
 		days = 30
-	elif cycle_value == "quarterly":
-		days = 90
+	elif cycle_value == "half_yearly":
+		days = 180
 	elif cycle_value == "annual":
 		days = 365
 	else:
@@ -299,8 +299,8 @@ def admin_create_subscription(
 	cycle_value = getattr(plan.billing_cycle, "value", plan.billing_cycle)
 	if cycle_value == "monthly":
 		days = 30
-	elif cycle_value == "quarterly":
-		days = 90
+	elif cycle_value == "half_yearly":
+		days = 180
 	elif cycle_value == "annual":
 		days = 365
 	else:

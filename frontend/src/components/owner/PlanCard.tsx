@@ -12,7 +12,7 @@ type Props = {
 
 const billingLabel = (cycle: Plan['billing_cycle']) => {
 	if (cycle === 'monthly') return 'Monthly';
-	if (cycle === 'quarterly') return 'Quarterly';
+	if (cycle === 'half_yearly') return '6 Months';
 	return 'Annual';
 };
 
@@ -22,7 +22,7 @@ export default function PlanCard({ plan, onEdit, onToggleActive }: Props) {
 	const badgeClasses =
 		plan.billing_cycle === 'monthly'
 			? 'bg-blue-400/10 text-blue-400'
-			: plan.billing_cycle === 'quarterly'
+			: plan.billing_cycle === 'half_yearly'
 			? 'bg-purple-400/10 text-purple-400'
 			: 'bg-green-400/10 text-green-400';
 

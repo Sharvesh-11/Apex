@@ -9,7 +9,7 @@ from app.database import Base
 
 class BillingCycle(str, PyEnum):
 	monthly = "monthly"
-	quarterly = "quarterly"
+	half_yearly = "half_yearly"
 	annual = "annual"
 
 

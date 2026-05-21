@@ -469,7 +469,7 @@ export default function PricingSection() {
 										const index = idx;
 										const isFeatured = index === 1;
 										const billingLabel =
-											plan.billing_cycle === 'monthly' ? '/ mo' : plan.billing_cycle === 'quarterly' ? '/ 3 mo' : '/ yr';
+											plan.billing_cycle === 'monthly' ? '/ mo' : plan.billing_cycle === 'half_yearly' ? '/ 6 mo' : '/ yr';
 
 										const stageLabel = index === 0 ? 'STAGE I' : index === 1 ? 'STAGE II' : 'STAGE III';
 										const features: string[] =
@@ -642,7 +642,7 @@ export default function PricingSection() {
 													</div>
 
 													{/* Savings note */}
-													{plan.billing_cycle === 'quarterly' && (
+													{plan.billing_cycle === 'half_yearly' && (
 														<div
 															style={{
 																fontSize: '12px',

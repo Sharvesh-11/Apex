@@ -128,7 +128,7 @@ def list_member_attendance(
 @router.get("/gym-qr")
 def get_gym_qr(current_user: User = Depends(require_role("gym_owner", "admin"))):
 	"""Return gym-wide checkin URL and printing instructions to owners/admins."""
-	frontend = getattr(settings, "FRONTEND_URL", "http://192.168.29.107:3000")
+	frontend = getattr(settings, "FRONTEND_URL", "https://apex.zenith-labs.app")
 	return {
 		"checkin_url": f"{frontend}/checkin",
 		"instructions": "Print this QR and place it at gym entrance",

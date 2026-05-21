@@ -134,7 +134,7 @@ export default function MemberPayPage() {
 
   const cycleLabel = (cycle: string) => {
     if (cycle === 'monthly') return '/ month';
-    if (cycle === 'quarterly') return '/ 3 months';
+    if (cycle === 'half_yearly') return '/ 6 months';
     if (cycle === 'annual') return '/ year';
     return '';
   };

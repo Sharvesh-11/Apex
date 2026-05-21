@@ -11,12 +11,12 @@ type PlanFormState = {
 	name: string;
 	description: string;
 	price: string;
-	billing_cycle: 'monthly' | 'quarterly' | 'annual';
+	billing_cycle: 'monthly' | 'half_yearly' | 'annual';
 };
 
 const billingCycleOptions: Array<{ label: string; value: PlanFormState['billing_cycle'] }> = [
 	{ label: 'Monthly', value: 'monthly' },
-	{ label: 'Quarterly', value: 'quarterly' },
+	{ label: 'Half Yearly', value: 'half_yearly' },
 	{ label: 'Annual', value: 'annual' },
 ];
 
@@ -41,7 +41,7 @@ function getPlanTierConfig(billingCycle: string) {
 				label: 'BEST VALUE',
 				prominence: 3,
 			};
-		case 'quarterly':
+		case 'half_yearly':
 			return {
 				tier: 'balanced',
 				accentColor: '#8B5CF6',
@@ -116,7 +116,7 @@ export default function OwnerPlansPage() {
 			if (plan && metrics[plan.id]) {
 				metrics[plan.id].subscribers += 1;
 				// Calculate annualized MRR based on billing cycle
-				const cycleMultiplier = plan.billing_cycle === 'annual' ? 1 / 12 : plan.billing_cycle === 'quarterly' ? 1 / 3 : 1;
+				const cycleMultiplier = plan.billing_cycle === 'annual' ? 1 / 12 : plan.billing_cycle === 'half_yearly' ? 1 / 6 : 1;
 				metrics[plan.id].mrr += plan.price * cycleMultiplier;
 			}
 		});
@@ -436,12 +436,12 @@ export default function OwnerPlansPage() {
 											{plan.price}
 										</div>
 										<div style={{ fontSize: '13px', color: '#8E7CC3', fontWeight: '500', marginLeft: '4px' }}>
-											/{plan.billing_cycle === 'annual' ? 'year' : plan.billing_cycle === 'quarterly' ? 'quarter' : 'month'}
+											/{plan.billing_cycle === 'annual' ? 'year' : plan.billing_cycle === 'half_yearly' ? '6 months' : 'month'}
 										</div>
 									</div>
 									<div style={{ fontSize: '12px', color: '#8E7CC3', marginTop: '8px', fontWeight: '500', letterSpacing: '0.03em' }}>
 										{plan.billing_cycle === 'annual' && '₹' + (plan.price / 12).toFixed(0) + '/mo'}
-										{plan.billing_cycle === 'quarterly' && '₹' + (plan.price / 3).toFixed(0) + '/mo'}
+										{plan.billing_cycle === 'half_yearly' && '₹' + (plan.price / 6).toFixed(0) + '/mo'}
 										{plan.billing_cycle === 'monthly' && plan.price >= 6000 ? '₹' + plan.price + '/mo' : ''}
 									</div>
 								</div>

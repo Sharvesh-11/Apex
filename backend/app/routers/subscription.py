@@ -25,8 +25,8 @@ def _billing_cycle_days(billing_cycle: BillingCycle) -> int:
 	cycle_value = getattr(billing_cycle, "value", billing_cycle)
 	if cycle_value == "monthly":
 		return 30
-	if cycle_value == "quarterly":
-		return 90
+	if cycle_value == "half_yearly":
+		return 180
 	if cycle_value == "annual":
 		return 365
 	raise HTTPException(

@@ -1,6 +1,6 @@
 export type UserRole = 'admin' | 'gym_owner' | 'gym_member';
 
-export type PlanBillingCycle = 'monthly' | 'quarterly' | 'annual';
+export type PlanBillingCycle = 'monthly' | 'half_yearly' | 'annual';
 
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled';
 

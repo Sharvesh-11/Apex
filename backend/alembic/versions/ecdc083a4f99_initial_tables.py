@@ -34,7 +34,7 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
     sa.Column('price', sa.Numeric(precision=10, scale=2), nullable=False),
-    sa.Column('billing_cycle', sa.Enum('monthly', 'quarterly', 'annual', name='billing_cycle'), nullable=False),
+    sa.Column('billing_cycle', sa.Enum('monthly', 'half_yearly', 'annual', name='billing_cycle'), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
