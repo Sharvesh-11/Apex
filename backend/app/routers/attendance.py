@@ -162,6 +162,7 @@ def qr_checkin(
             "success": True,
             "already_checked_in": True,
             "member_name": member.full_name,
+			"current_streak": member.current_streak,
             "message": "Already checked in today",
         }
 
@@ -181,6 +182,7 @@ def qr_checkin(
         "success": True,
         "already_checked_in": False,
         "member_name": member.full_name,
+		"current_streak": member.current_streak,
         "checked_in_at": log.checked_in_at.isoformat(),
         "message": "Checked in successfully",
     }
