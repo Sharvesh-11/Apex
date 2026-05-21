@@ -27,7 +27,7 @@ class MemberOut(BaseModel):
 	pin: Optional[str] = None
 	current_streak: int = 0
 	longest_streak: int = 0
-	last_checkin_date: Optional[str] = None
+	last_checkin_date: Optional[date] = None
 	joined_at: date
 	is_active: bool
 	email: str
