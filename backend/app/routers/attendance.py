@@ -1,6 +1,7 @@
 from datetime import datetime, date, timedelta
 from uuid import UUID
 from typing import List
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import Date, cast
@@ -37,29 +38,23 @@ def _current_role(user: User) -> str:
 
 
 def update_streak(member: Member, db: Session) -> None:
-	from datetime import date, timedelta
+    today = date.today()
 
-	today = date.today()
+    if member.last_checkin_date == today:
+        return
 
-	if member.last_checkin_date is None:
-		member.current_streak = 1
-	elif member.last_checkin_date == today:
-		# Already checked in today — no change
-		pass
-	elif member.last_checkin_date == today - timedelta(days=1):
-		# Consecutive day
-		member.current_streak += 1
-	else:
-		# Streak reset
-		member.current_streak = 1
+    if member.last_checkin_date is None:
+        member.current_streak = 1
+    elif member.last_checkin_date == today - timedelta(days=1):
+        member.current_streak += 1
+    else:
+        member.current_streak = 1
 
-	if member.current_streak > member.longest_streak:
-		member.longest_streak = member.current_streak
+    member.longest_streak = max(member.longest_streak, member.current_streak)
+    member.last_checkin_date = today
 
-	member.last_checkin_date = today
-
-	db.commit()
-	db.refresh(member)
+    db.commit()
+    db.refresh(member)
 
 
 @router.post("/checkin/pin", response_model=CheckInResponse)
@@ -145,8 +140,7 @@ def qr_checkin(
     if member is None:
         raise HTTPException(status_code=404, detail="Member not found")
 
-    today = date.today()
-
+    today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
     # Duplicate check — cast checked_in_at to date
     existing = (
         db.query(AttendanceLog)
