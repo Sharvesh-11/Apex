@@ -41,7 +41,12 @@ def create_subscription(
 	db: Session = Depends(get_db),
 	current_user: User = Depends(require_role("gym_owner", "admin")),
 ) -> SubscriptionOut:
-	member = db.query(Member).filter(Member.id == data.member_id).first()
+	member = (
+		db.query(Member)
+		.options(joinedload(Member.user))
+		.filter(Member.id == data.member_id)
+		.first()
+	)
 	if member is None:
 		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
 
@@ -52,6 +57,8 @@ def create_subscription(
 	end_date = data.start_date + timedelta(days=_billing_cycle_days(plan.billing_cycle))
 	subscription = Subscription(
 		member_id=data.member_id,
+		member_name=member.full_name,
+		member_email=member.user.email,
 		plan_id=data.plan_id,
 		start_date=data.start_date,
 		end_date=end_date,

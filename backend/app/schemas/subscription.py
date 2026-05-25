@@ -24,6 +24,8 @@ class AdminSubscriptionCreate(BaseModel):
 class SubscriptionOut(BaseModel):
     id: UUID
     member_id: UUID
+    member_name: Optional[str] = None
+    member_email: Optional[str] = None
     plan_id: UUID
     start_date: date
     end_date: date
