@@ -66,6 +66,7 @@ def _current_role(user: User) -> str:
 	return getattr(user.role, "value", user.role)
 
 
+@router.post("/cash/", response_model=PaymentOut, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 @router.post("/cash", response_model=PaymentOut, status_code=status.HTTP_201_CREATED)
 def create_cash_payment(
 	data: CashPaymentCreate,
@@ -76,6 +77,7 @@ def create_cash_payment(
 	return _payment_to_out(payment, db)
 
 
+@router.post("/razorpay/order/", include_in_schema=False)
 @router.post("/razorpay/order")
 def create_razorpay_payment_order(
 	data: RazorpayOrderCreate,
@@ -106,6 +108,7 @@ def create_razorpay_payment_order(
 	return {"order": order, "payment_id": str(payment.id)}
 
 
+@router.post("/razorpay/verify/", response_model=PaymentOut, include_in_schema=False)
 @router.post("/razorpay/verify", response_model=PaymentOut)
 def verify_razorpay_payment(
 	data: RazorpayVerify,
@@ -186,6 +189,7 @@ def list_all_payments(
 	return [_payment_to_out(payment, db) for payment in payments]
 
 
+@router.post("/razorpay/initiate/", include_in_schema=False)
 @router.post("/razorpay/initiate", include_in_schema=True)
 def initiate_razorpay_for_plan(
 	data: RazorpayInitiateRequest,
@@ -269,6 +273,12 @@ def initiate_razorpay_for_plan(
 
 
 
+@router.post(
+	"/admin/subscription/",
+	response_model=SubscriptionOut,
+	status_code=status.HTTP_201_CREATED,
+	include_in_schema=False,
+)
 @router.post(
 	"/admin/subscription",
 	response_model=SubscriptionOut,
